@@ -391,11 +391,29 @@ document.querySelectorAll('[data-scroll]').forEach(b=>{
 
 // ── LIVE PRICE (Stooq, 5s) ──
 async function fetchLive(){
+  let close, open, high, low;
   try{
+    // Try Pages Function (no CORS issues if deployed)
     const res = await fetch('/price?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw 'no-fn';
     const j = await res.json();
     if(j.error) throw j.error;
-    const close = j.close, open = j.open, high = j.high, low = j.low;
+    close=j.close; open=j.open; high=j.high; low=j.low;
+  }catch(_){
+    // Fallback: public CORS proxy + Stooq
+    try{
+      const url = 'https://corsproxy.io/?' + encodeURIComponent('https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=csv');
+      const r2 = await fetch(url+'&t='+Date.now(),{cache:'no-store'});
+      const txt = await r2.text();
+      const cols = txt.trim().split('\n')[1].split(',');
+      open=parseFloat(cols[3]); high=parseFloat(cols[4]); low=parseFloat(cols[5]); close=parseFloat(cols[6]);
+    }catch(e){
+      $('liveBadge').className='live-badge offline';
+      $('liveBadge').innerHTML='<span class="live-dot"></span>OFFLINE';
+      return;
+    }
+  }
+  try{
     if(isNaN(close)) throw 0;
     currentPrice = close;
     const ch = close - open, chPct = (ch/open)*100;
