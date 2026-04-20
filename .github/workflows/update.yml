@@ -2,9 +2,11 @@ name: Update WTI Data
 
 on:
   schedule:
-    # Alle 30 Min während US-Markt (Mo-Fr 13:00-21:00 UTC = 9-17 ET)
-    - cron: "*/30 13-21 * * 1-5"
-    # 1x abends nach EOD für Backtest
+    # Alle 5 Min während US-Markt (Mo-Fr 13-21 UTC = 9-17 ET) — GitHub min interval
+    - cron: "*/5 13-21 * * 1-5"
+    # Alle 15 Min ausserhalb Marktzeiten
+    - cron: "*/15 0-12,22-23 * * *"
+    # Backtest 1x täglich abends
     - cron: "0 23 * * 1-5"
   workflow_dispatch:  # manuell triggerbar
 
@@ -30,7 +32,7 @@ jobs:
       - name: Generate today's signal
         run: python signal_generator.py
 
-      - name: Run backtest (only at 23:00 UTC)
+      - name: Run backtest (only at 23:00 UTC or manual)
         if: github.event.schedule == '0 23 * * 1-5' || github.event_name == 'workflow_dispatch'
         run: python backtest.py
 
