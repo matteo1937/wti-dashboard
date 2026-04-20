@@ -1,0 +1,218 @@
+{
+  "lastUpdated": "2026-04-20T19:34:48.193084+00:00",
+  "date": "2026-04-20",
+  "price": 87.08,
+  "change": -2.73,
+  "changePercent": -3.04,
+  "atr": 3.45,
+  "bias": "bullish",
+  "biasReason": "Geopolitische Eskalation am Strait of Hormuz treibt Preise zur\u00fcck nach oben nach Freitags-Crash. Bounce vom $84 Support.",
+  "keyLevels": {
+    "settlement": 84.94,
+    "pivot": 87.2,
+    "r1": 91.5,
+    "r2": 95.3,
+    "s1": 85.4,
+    "s2": 82.8,
+    "vwap": 88.45,
+    "ema200": 92.1
+  },
+  "sessions": {
+    "premarket": {
+      "status": "complete",
+      "completedAt": "2026-04-20T18:40:00Z",
+      "summary": "WTI bounced +5.81% nach Strait of Hormuz Eskalation. Iran/USA Spannungen treiben Risk Premium. OPEC+ erh\u00f6ht Output 206k bpd ab April \u2014 begrenzt Upside. Schl\u00fcsselzone $87-89, Resistance $92 (200 EMA).",
+      "checks": [
+        {
+          "label": "Overnight Range gecheckt",
+          "done": true
+        },
+        {
+          "label": "Globex Volume gepr\u00fcft",
+          "done": true
+        },
+        {
+          "label": "Wirtschaftskalender gecheckt",
+          "done": true
+        },
+        {
+          "label": "Geopolitik / OPEC News",
+          "done": true
+        },
+        {
+          "label": "Keylevels markiert",
+          "done": true
+        },
+        {
+          "label": "ATR notiert",
+          "done": true
+        },
+        {
+          "label": "Bias festgelegt",
+          "done": true
+        },
+        {
+          "label": "Margin Check",
+          "done": true
+        }
+      ]
+    },
+    "opening": {
+      "status": "active",
+      "completedAt": null,
+      "setup": "Long Pullback nach Hormuz-Spike",
+      "direction": "long",
+      "entry": 88.0,
+      "stop": 84.8,
+      "target1": 91.5,
+      "target2": 95.0,
+      "rr": "2.2",
+      "summary": "Warte auf Pullback in $87.50-$88.50 Zone. Long-Setup nur bei bullischer Reversal-Kerze + RSI <55. Stop unter Freitag-Low.",
+      "checks": [
+        {
+          "label": "Erste 5-Min Kerze abgewartet",
+          "done": true
+        },
+        {
+          "label": "Opening Range definiert",
+          "done": true
+        },
+        {
+          "label": "Bias best\u00e4tigt",
+          "done": true
+        },
+        {
+          "label": "VWAP Position gecheckt",
+          "done": false
+        },
+        {
+          "label": "Volume Best\u00e4tigung",
+          "done": false
+        },
+        {
+          "label": "OCO Order gesetzt",
+          "done": false
+        }
+      ]
+    },
+    "midday": {
+      "status": "pending",
+      "completedAt": null,
+      "action": null,
+      "summary": null,
+      "checks": [
+        {
+          "label": "Position Review",
+          "done": false
+        },
+        {
+          "label": "Stop auf BE gezogen",
+          "done": false
+        },
+        {
+          "label": "Target 1 gecheckt",
+          "done": false
+        },
+        {
+          "label": "Setup noch g\u00fcltig?",
+          "done": false
+        },
+        {
+          "label": "Partial Take Profit",
+          "done": false
+        }
+      ]
+    },
+    "closing": {
+      "status": "pending",
+      "completedAt": null,
+      "overnight": false,
+      "recommendation": null,
+      "summary": null,
+      "checks": [
+        {
+          "label": "Trend Assessment",
+          "done": false
+        },
+        {
+          "label": "Overnight Entscheidung",
+          "done": false
+        },
+        {
+          "label": "Margin Check Overnight",
+          "done": false
+        },
+        {
+          "label": "Offene Orders canceln",
+          "done": false
+        },
+        {
+          "label": "Settlement notiert",
+          "done": false
+        }
+      ]
+    },
+    "eod": {
+      "status": "pending",
+      "completedAt": null,
+      "settlement": null,
+      "pnl": null,
+      "notes": null,
+      "tomorrowBias": null,
+      "checks": [
+        {
+          "label": "PnL notiert",
+          "done": false
+        },
+        {
+          "label": "Journal ausgef\u00fcllt",
+          "done": false
+        },
+        {
+          "label": "Morgen vorbereitet",
+          "done": false
+        },
+        {
+          "label": "Rollover gepr\u00fcft",
+          "done": false
+        }
+      ]
+    }
+  },
+  "recentNews": [
+    {
+      "headline": "WTI springt +5% auf $88.80 nach Iran-Eskalation am Hormuz",
+      "time": "Heute 09:30 ET",
+      "source": "TradingEconomics",
+      "sentiment": "bullish"
+    },
+    {
+      "headline": "Strait of Hormuz: Angriffe auf Handelsschiffe",
+      "time": "Heute 06:00 ET",
+      "source": "CNBC",
+      "sentiment": "bullish"
+    },
+    {
+      "headline": "OPEC+ erh\u00f6ht Output um 206k bpd ab April \u2014 begrenzt Upside",
+      "time": "Gestern",
+      "source": "OilPrice",
+      "sentiment": "bearish"
+    },
+    {
+      "headline": "USA erw\u00e4gt weitere Iran-Gespr\u00e4che \u2014 Diplomatie k\u00f6nnte Risk Premium senken",
+      "time": "Heute 11:00 ET",
+      "source": "CNBC",
+      "sentiment": "bearish"
+    },
+    {
+      "headline": "WTI Freitags-Crash -11.5% auf $84 \u2014 gr\u00f6\u00dfter Tagesverlust 2026",
+      "time": "Freitag 17.04",
+      "source": "Investing.com",
+      "sentiment": "bearish"
+    }
+  ],
+  "sentiment": 0.35,
+  "journal": [],
+  "dayHigh": 89.55,
+  "dayLow": 85.48
+}
