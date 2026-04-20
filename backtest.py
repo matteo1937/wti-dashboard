@@ -281,6 +281,8 @@ if __name__ == "__main__":
         "best_strategy":    best,
         "optimization_top10": opt["top_10"],
     }
-    with open("/Users/matteoeliazaugg/wti-dashboard/backtest_results.json", "w") as f:
+    from pathlib import Path
+    out_path = Path(__file__).parent / "backtest_results.json"
+    with open(out_path, "w") as f:
         json.dump(export, f, indent=2, default=str)
     print("\n  → Ergebnisse exportiert nach backtest_results.json\n")

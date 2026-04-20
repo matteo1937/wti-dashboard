@@ -23,8 +23,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-DATA_PATH   = Path("/Users/matteoeliazaugg/wti-dashboard/data.json")
-SIGNAL_PATH = Path("/Users/matteoeliazaugg/wti-dashboard/today_signal.json")
+DATA_PATH   = Path(__file__).parent / "data.json"
+SIGNAL_PATH = Path(__file__).parent / "today_signal.json"
 
 # Strategie-Parameter (basierend auf Backtest-Optimum)
 ATR_STOP_MULT    = 1.5
