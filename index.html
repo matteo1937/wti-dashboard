@@ -1371,7 +1371,7 @@
   }
 
   loadTodaySignal();
-  setInterval(loadTodaySignal, 60000);
+  setInterval(loadTodaySignal, 30000);
 
   // Load backtest on init + every 5 min
   loadBacktestResults();
@@ -1383,7 +1383,7 @@
 
   // Initial load + auto-refresh every 60s
   loadData();
-  setInterval(loadData, 60000);
+  setInterval(loadData, 30000);
 
   // ── LIVE PRICE FETCHER (Stooq, every 30s) ──
   async function fetchLivePrice() {
@@ -1423,7 +1423,7 @@
     }
   }
   fetchLivePrice();
-  setInterval(fetchLivePrice, 30000); // alle 30 Sekunden
+  setInterval(fetchLivePrice, 5000); // alle 5 Sekunden
 
   // ── TRADINGVIEW WIDGET ──
   const tvScript = document.createElement('script');
