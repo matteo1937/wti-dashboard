@@ -258,6 +258,23 @@
   </div>
 </div>
 
+<!-- SAXO TRADE UPLOAD -->
+<div class="section open" id="sec-upload">
+  <div class="sec-head" data-toggle="sec-upload">
+    <div class="sec-title"><span class="ico">🤖</span>Saxo Trade Bewertung</div>
+    <span class="sec-chev">›</span>
+  </div>
+  <div class="sec-body">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
+      Lade einen Saxo-Bank-Screenshot hoch — KI bewertet Entry & schlägt Stop/TP vor.
+    </div>
+    <input type="file" id="tradeFile" accept="image/*" capture="environment" style="display:none">
+    <button class="btn btn-primary" id="uploadBtn">📸 Trade-Screenshot wählen</button>
+    <div id="uploadPreview" style="display:none;margin-top:12px"></div>
+    <div id="uploadResult" style="display:none;margin-top:14px"></div>
+  </div>
+</div>
+
 <!-- TRADINGVIEW CHART -->
 <div class="section open" id="sec-chart">
   <div class="sec-head" data-toggle="sec-chart">
@@ -699,6 +716,136 @@ $('addJournalBtn').addEventListener('click',()=>{
 });
 renderJournal();
 renderTrade();
+
+// ── SAXO TRADE UPLOAD ──
+let lastAnalysis = null;
+let lastImageData = null;
+
+$('uploadBtn').addEventListener('click', () => $('tradeFile').click());
+
+$('tradeFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  // Resize image client-side to keep API costs down
+  const resized = await resizeImage(file, 1500, 0.85);
+  lastImageData = resized;
+  $('uploadPreview').style.display = 'block';
+  $('uploadPreview').innerHTML = `
+    <img src="data:image/jpeg;base64,${resized}" style="width:100%;max-height:240px;object-fit:contain;border-radius:10px;background:var(--surface-2);margin-bottom:10px">
+    <button class="btn btn-success" id="analyzeBtn">🤖 KI-Bewertung starten</button>
+  `;
+  $('analyzeBtn').addEventListener('click', analyzeTrade);
+});
+
+function resizeImage(file, maxW, q) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / img.width);
+      const w = img.width * scale, h = img.height * scale;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = c.toDataURL('image/jpeg', q);
+      res(dataUrl.split(',')[1]); // base64 only
+    };
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function analyzeTrade() {
+  let pwd = sessionStorage.getItem('uploadPwd');
+  if (!pwd) {
+    pwd = prompt('Passwort für Upload:');
+    if (!pwd) return;
+    sessionStorage.setItem('uploadPwd', pwd);
+  }
+  $('uploadResult').style.display = 'block';
+  $('uploadResult').innerHTML = '<div class="mt-empty">🤖 KI analysiert Screenshot…</div>';
+
+  const ctx = {
+    price: currentPrice ?? data?.price,
+    atr: data?.atr,
+    bias: data?.bias, biasReason: data?.biasReason,
+    sentiment: data?.sentiment,
+    pivot: data?.keyLevels?.pivot, vwap: data?.keyLevels?.vwap, ema200: data?.keyLevels?.ema200,
+    r1: data?.keyLevels?.r1, r2: data?.keyLevels?.r2, s1: data?.keyLevels?.s1, s2: data?.keyLevels?.s2,
+  };
+
+  try {
+    const r = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd, image: lastImageData, mediaType: 'image/jpeg', context: ctx }),
+    });
+    const data2 = await r.json();
+    if (!r.ok || data2.error) {
+      if (r.status === 401) sessionStorage.removeItem('uploadPwd');
+      $('uploadResult').innerHTML = `<div style="color:var(--red);padding:14px;background:rgba(255,69,58,.1);border-radius:10px">❌ ${data2.error || 'Fehler'}</div>`;
+      return;
+    }
+    lastAnalysis = data2;
+    renderAnalysis(data2);
+  } catch (e) {
+    $('uploadResult').innerHTML = `<div style="color:var(--red)">Netzwerk-Fehler: ${e}</div>`;
+  }
+}
+
+function renderAnalysis(a) {
+  const stars = '⭐'.repeat(a.quality_score) + '☆'.repeat(5 - a.quality_score);
+  const dirCls = a.direction === 'long' ? 'long' : 'short';
+  const arrow = a.direction === 'long' ? '▲' : '▼';
+  const qCol = a.quality_score >= 4 ? 'var(--green)' : a.quality_score >= 3 ? 'var(--orange)' : 'var(--red)';
+  $('uploadResult').innerHTML = `
+    <div style="background:var(--surface-2);border-radius:14px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span class="dir-badge ${dirCls}">${arrow} ${(a.direction||'').toUpperCase()} ${a.asset||''}</span>
+        <span style="color:${qCol};font-weight:700;font-size:14px">${stars}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px">Quality: ${a.quality_label||'—'}</div>
+      <div style="font-size:13px;line-height:1.5;margin-bottom:14px">${a.rationale||''}</div>
+
+      <div class="levels">
+        <div class="lvl entry"><div class="lvl-lbl">🎯 Entry</div><div class="lvl-val">${fmt(a.entry)}</div></div>
+        <div class="lvl"><div class="lvl-lbl">📦 Größe</div><div class="lvl-val" style="font-size:14px;padding-top:4px">${a.size||'—'}</div></div>
+        <div class="lvl stop"><div class="lvl-lbl">🛑 Stop</div><div class="lvl-val">${fmt(a.stop_suggested)}</div></div>
+        <div class="lvl tp"><div class="lvl-lbl">🟢 TP1</div><div class="lvl-val">${fmt(a.tp1_suggested)}</div></div>
+        <div class="lvl tp full"><div class="lvl-lbl">🟢 TP2 · R:R 1:${a.risk_reward}</div><div class="lvl-val">${fmt(a.tp2_suggested)}</div></div>
+      </div>
+
+      ${a.warnings?.length ? `<div style="margin-top:12px"><div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px">⚠️ Warnungen</div>${a.warnings.map(w=>`<div style="font-size:12px;color:var(--muted);padding:4px 0">• ${w}</div>`).join('')}</div>` : ''}
+      ${a.tips ? `<div style="margin-top:12px;padding:10px;background:rgba(10,132,255,.1);border-radius:8px;font-size:12px;color:var(--text)"><b style="color:var(--blue)">💡 Tipp:</b> ${a.tips}</div>` : ''}
+    </div>
+    <button class="btn btn-success" id="saveAnalysisBtn">✓ Trade übernehmen + ins Journal</button>
+  `;
+  $('saveAnalysisBtn').addEventListener('click', saveAnalysis);
+}
+
+function saveAnalysis() {
+  if (!lastAnalysis) return;
+  // Set as my-trade
+  if (lastAnalysis.entry && lastAnalysis.direction) {
+    trade = { dir: lastAnalysis.direction, entry: lastAnalysis.entry, qty: 1, opened: Date.now() };
+    localStorage.setItem('mt', JSON.stringify(trade));
+    renderTrade();
+  }
+  // Add to journal
+  const entry = `📸 KI-Trade [${lastAnalysis.asset||'?'} ${lastAnalysis.direction?.toUpperCase()||'?'}]
+Entry: $${lastAnalysis.entry} · Stop: $${lastAnalysis.stop_suggested} · TP1: $${lastAnalysis.tp1_suggested} · TP2: $${lastAnalysis.tp2_suggested}
+Quality: ${lastAnalysis.quality_score}/5 (${lastAnalysis.quality_label})
+${lastAnalysis.rationale}
+${lastAnalysis.tips ? '💡 ' + lastAnalysis.tips : ''}`;
+  journal.push({ t: Date.now(), text: entry, image: lastImageData });
+  localStorage.setItem('jr', JSON.stringify(journal));
+  renderJournal();
+  toast('✓ Trade & Journal gespeichert');
+  // Collapse upload section
+  $('uploadResult').style.display = 'none';
+  $('uploadPreview').style.display = 'none';
+  $('tradeFile').value = '';
+  lastAnalysis = null; lastImageData = null;
+}
 
 // ── TRADINGVIEW ──
 const tv = document.createElement('script');
