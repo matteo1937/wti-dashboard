@@ -9,7 +9,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-DATA_PATH = Path(__file__).parent / "data.json"
+DATA_PATH = Path(__file__).parent / "public" / "data.json"
 STOOQ_URL = "https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=csv"
 
 

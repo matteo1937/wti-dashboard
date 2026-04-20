@@ -282,7 +282,7 @@ if __name__ == "__main__":
         "optimization_top10": opt["top_10"],
     }
     from pathlib import Path
-    out_path = Path(__file__).parent / "backtest_results.json"
+    out_path = Path(__file__).parent / "public" / "backtest_results.json"
     with open(out_path, "w") as f:
         json.dump(export, f, indent=2, default=str)
     print("\n  → Ergebnisse exportiert nach backtest_results.json\n")
