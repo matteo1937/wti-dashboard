@@ -1,9 +1,9 @@
 {
-  "lastUpdated": "2026-04-21T10:51:58.839449+00:00",
+  "lastUpdated": "2026-04-21T15:55:27.285118+00:00",
   "date": "2026-04-21",
-  "price": 86.35,
-  "change": 0.02,
-  "changePercent": 0.02,
+  "price": 89.71,
+  "change": 3.36,
+  "changePercent": 3.89,
   "atr": 3.45,
   "bias": "bullish",
   "biasReason": "Geopolitische Eskalation am Strait of Hormuz treibt Preise zur\u00fcck nach oben nach Freitags-Crash. Bounce vom $84 Support.",
@@ -213,6 +213,6 @@
   ],
   "sentiment": 0.35,
   "journal": [],
-  "dayHigh": 87.49,
+  "dayHigh": 90.09,
   "dayLow": 85.67
 }
