@@ -258,6 +258,18 @@
   </div>
 </div>
 
+<!-- TRADE-HISTORIE -->
+<div class="section open" id="sec-trades">
+  <div class="sec-head" data-toggle="sec-trades">
+    <div class="sec-title"><span class="ico">📊</span>Trade-Historie</div>
+    <span class="sec-meta"><span id="tradesSummary">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div class="stat-grid" id="tradesStats"></div>
+    <div id="tradesList"></div>
+  </div>
+</div>
+
 <!-- SAXO TRADE UPLOAD -->
 <div class="section open" id="sec-upload">
   <div class="sec-head" data-toggle="sec-upload">
@@ -377,6 +389,7 @@ let signal = null;
 let data = null;
 let trade = JSON.parse(localStorage.getItem('mt') || 'null');
 let journal = JSON.parse(localStorage.getItem('jr') || '[]');
+let trades  = JSON.parse(localStorage.getItem('tr') || '[]');
 
 // ── UTILS ──
 const $ = id => document.getElementById(id);
@@ -716,6 +729,103 @@ $('addJournalBtn').addEventListener('click',()=>{
 });
 renderJournal();
 renderTrade();
+renderTrades();
+
+// ── TRADE-HISTORIE ──
+function calcPnl(t, px) {
+  if (!t.entry || !px) return 0;
+  const pts = t.direction === 'long' ? (px - t.entry) : (t.entry - px);
+  return pts * 100 * (t.qty || 1); // MCL = $100/pt
+}
+
+function renderTrades() {
+  const list = $('tradesList');
+  if (!trades.length) {
+    list.innerHTML = '<div class="mt-empty">Noch keine Trades im Journal</div>';
+    $('tradesStats').innerHTML = '';
+    $('tradesSummary').textContent = '0 Trades';
+    return;
+  }
+  const px = currentPrice;
+  let openPnl = 0, realPnl = 0, wins = 0, losses = 0;
+  trades.forEach(t => {
+    if (t.status === 'open') {
+      t._livePnl = calcPnl(t, px);
+      openPnl += t._livePnl;
+    } else {
+      realPnl += (t.pnl || 0);
+      if ((t.pnl || 0) > 0) wins++; else if ((t.pnl || 0) < 0) losses++;
+    }
+  });
+  const total = openPnl + realPnl;
+  const closedCount = wins + losses;
+  const winRate = closedCount ? Math.round((wins / closedCount) * 100) : 0;
+
+  $('tradesSummary').textContent = `${fmtUsd(total)} · ${trades.length}T`;
+  $('tradesStats').innerHTML = `
+    <div class="stat"><div class="stat-lbl">Offen P/L</div><div class="stat-val ${openPnl>=0?'up':'down'}">${fmtUsd(openPnl)}</div></div>
+    <div class="stat"><div class="stat-lbl">Realisiert</div><div class="stat-val ${realPnl>=0?'up':'down'}">${fmtUsd(realPnl)}</div></div>
+    <div class="stat"><div class="stat-lbl">Gesamt</div><div class="stat-val ${total>=0?'up':'down'}">${fmtUsd(total)}</div></div>
+    <div class="stat"><div class="stat-lbl">Win Rate</div><div class="stat-val">${winRate}% <span style="font-size:11px;color:var(--muted);font-weight:500">(${wins}W/${losses}L)</span></div></div>
+  `;
+
+  list.innerHTML = trades.slice().reverse().map(t => {
+    const isOpen = t.status === 'open';
+    const pnl = isOpen ? (t._livePnl||0) : (t.pnl||0);
+    const cls = pnl>0.01?'up':pnl<-0.01?'down':'flat';
+    const arrow = t.direction==='long'?'▲':'▼';
+    const dirCol = t.direction==='long'?'var(--green)':'var(--red)';
+    const dateStr = new Date(t.ts).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'});
+    return `
+      <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:8px;border-left:3px solid ${dirCol}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:${dirCol};font-weight:700">${arrow} ${t.asset||'WTI'}</span>
+            <span style="font-size:11px;color:var(--muted)">${dateStr}</span>
+            ${isOpen ? '<span style="font-size:10px;padding:2px 6px;background:rgba(10,132,255,.15);color:var(--blue);border-radius:8px;font-weight:600">OFFEN</span>' : '<span style="font-size:10px;padding:2px 6px;background:var(--surface-3);color:var(--muted);border-radius:8px;font-weight:600">ZU</span>'}
+          </div>
+          <div class="${cls==='up'?'stat-val up':cls==='down'?'stat-val down':''}" style="font-weight:700;font-variant-numeric:tabular-nums;font-size:16px">${fmtUsd(pnl)}</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <span>Entry: <b style="color:var(--text)">${fmt(t.entry)}</b></span>
+          <span>${isOpen ? 'Now' : 'Exit'}: <b style="color:var(--text)">${fmt(isOpen?px:t.exit)}</b></span>
+          <span>Stop: <b style="color:var(--red)">${fmt(t.stop)}</b></span>
+          <span>TP1: <b style="color:var(--green)">${fmt(t.tp1)}</b></span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          ${isOpen ? `<button class="btn btn-secondary" style="padding:8px;font-size:12px" onclick="closeTrade(${t.id})">✓ Schliessen</button>` : ''}
+          <button class="btn btn-secondary" style="padding:8px;font-size:12px;background:rgba(255,69,58,.08);color:var(--red);border-color:rgba(255,69,58,.2)" onclick="deleteTrade(${t.id})">🗑 Löschen</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.closeTrade = function(id) {
+  const t = trades.find(x=>x.id===id); if(!t) return;
+  const exitStr = prompt('Exit-Preis (leer = aktueller Live-Preis):', currentPrice ? currentPrice.toFixed(2) : '');
+  if (exitStr === null) return;
+  const exit = parseFloat(exitStr) || currentPrice;
+  if (!exit) { toast('Kein Preis angegeben'); return; }
+  t.exit = exit;
+  t.status = 'closed';
+  t.pnl = calcPnl(t, exit);
+  t.closedAt = Date.now();
+  localStorage.setItem('tr', JSON.stringify(trades));
+  renderTrades();
+  toast('Trade geschlossen: ' + fmtUsd(t.pnl));
+};
+
+window.deleteTrade = function(id) {
+  if (!confirm('Trade wirklich löschen?')) return;
+  trades = trades.filter(t=>t.id!==id);
+  localStorage.setItem('tr', JSON.stringify(trades));
+  renderTrades();
+};
+
+// Re-render on live price change
+const origRender = renderTrade;
+renderTrade = function(){ origRender(); renderTrades(); };
 
 // ── SAXO TRADE UPLOAD ──
 let lastAnalysis = null;
@@ -830,6 +940,24 @@ function saveAnalysis() {
     localStorage.setItem('mt', JSON.stringify(trade));
     renderTrade();
   }
+  // Add to trade history
+  trades.push({
+    id: Date.now(),
+    ts: Date.now(),
+    asset: lastAnalysis.asset || 'WTI',
+    direction: lastAnalysis.direction,
+    entry: lastAnalysis.entry,
+    stop: lastAnalysis.stop_suggested,
+    tp1: lastAnalysis.tp1_suggested,
+    tp2: lastAnalysis.tp2_suggested,
+    qty: 1,
+    quality: lastAnalysis.quality_score,
+    status: 'open',
+    exit: null,
+    pnl: null,
+  });
+  localStorage.setItem('tr', JSON.stringify(trades));
+  renderTrades();
   // Add to journal
   const entry = `📸 KI-Trade [${lastAnalysis.asset||'?'} ${lastAnalysis.direction?.toUpperCase()||'?'}]
 Entry: $${lastAnalysis.entry} · Stop: $${lastAnalysis.stop_suggested} · TP1: $${lastAnalysis.tp1_suggested} · TP2: $${lastAnalysis.tp2_suggested}
