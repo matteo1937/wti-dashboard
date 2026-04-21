@@ -267,6 +267,23 @@
   <div class="sec-body">
     <div class="stat-grid" id="tradesStats"></div>
     <div id="tradesList"></div>
+    <button class="btn btn-secondary" id="addTradeBtn" style="margin-top:10px">➕ Trade manuell hinzufügen</button>
+    <div id="addTradeForm" style="display:none;margin-top:10px;background:var(--surface-2);border-radius:12px;padding:14px">
+      <div class="mt-grid">
+        <div><label>Richtung</label><select id="atDir"><option value="long">LONG</option><option value="short">SHORT</option></select></div>
+        <div><label>Entry $</label><input id="atEntry" type="number" step="0.01" inputmode="decimal"></div>
+        <div><label>Kontrakte</label><input id="atQty" type="number" step="1" value="1" inputmode="numeric"></div>
+      </div>
+      <div class="mt-grid" style="margin-top:8px">
+        <div><label>Stop $</label><input id="atStop" type="number" step="0.01" inputmode="decimal"></div>
+        <div><label>TP1 $</label><input id="atTp1" type="number" step="0.01" inputmode="decimal"></div>
+        <div><label>TP2 $</label><input id="atTp2" type="number" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="atCancelBtn">Abbrechen</button>
+        <button class="btn btn-primary" id="atSaveBtn">✓ Speichern</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -390,6 +407,27 @@ let data = null;
 let trade = JSON.parse(localStorage.getItem('mt') || 'null');
 let journal = JSON.parse(localStorage.getItem('jr') || '[]');
 let trades  = JSON.parse(localStorage.getItem('tr') || '[]');
+
+// Migration: if trades empty but 'mt' (Mein Trade) exists, seed it
+(function migrate(){
+  if (trades.length) return;
+  const mt = JSON.parse(localStorage.getItem('mt') || 'null');
+  if (mt && mt.entry && mt.dir) {
+    trades.push({
+      id: mt.opened || Date.now(),
+      ts: mt.opened || Date.now(),
+      asset: 'WTI',
+      direction: mt.dir,
+      entry: mt.entry,
+      stop: null, tp1: null, tp2: null,
+      qty: mt.qty || 1,
+      quality: null,
+      status: 'open',
+      exit: null, pnl: null,
+    });
+    localStorage.setItem('tr', JSON.stringify(trades));
+  }
+})();
 
 // ── UTILS ──
 const $ = id => document.getElementById(id);
@@ -815,6 +853,33 @@ window.closeTrade = function(id) {
   renderTrades();
   toast('Trade geschlossen: ' + fmtUsd(t.pnl));
 };
+
+// Add-Trade UI
+$('addTradeBtn').addEventListener('click', () => {
+  const f = $('addTradeForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  if (f.style.display === 'block' && currentPrice) $('atEntry').value = currentPrice.toFixed(2);
+});
+$('atCancelBtn').addEventListener('click', () => $('addTradeForm').style.display = 'none');
+$('atSaveBtn').addEventListener('click', () => {
+  const dir = $('atDir').value;
+  const entry = parseFloat($('atEntry').value);
+  const qty = parseInt($('atQty').value) || 1;
+  const stop = parseFloat($('atStop').value) || null;
+  const tp1  = parseFloat($('atTp1').value) || null;
+  const tp2  = parseFloat($('atTp2').value) || null;
+  if (!entry) { toast('Entry fehlt'); return; }
+  trades.push({
+    id: Date.now(), ts: Date.now(),
+    asset: 'WTI', direction: dir, entry, stop, tp1, tp2, qty,
+    quality: null, status: 'open', exit: null, pnl: null,
+  });
+  localStorage.setItem('tr', JSON.stringify(trades));
+  $('addTradeForm').style.display = 'none';
+  ['atEntry','atStop','atTp1','atTp2'].forEach(id=>$(id).value='');
+  renderTrades();
+  toast('Trade gespeichert');
+});
 
 window.deleteTrade = function(id) {
   if (!confirm('Trade wirklich löschen?')) return;
