@@ -65,7 +65,7 @@ REGELN für Stop/TP-Vorschlag:
 - Quality 3 = neutral
 - Quality 1 = gegen Bias / gegen Trend
 
-Antworte AUSSCHLIESSLICH mit gültigem JSON in genau diesem Format (kein Markdown, kein ```json):
+Antworte AUSSCHLIESSLICH mit gültigem JSON in genau diesem Format (kein Markdown-Codeblock, nur rohes JSON):
 {
   "asset": "WTI",
   "direction": "long" oder "short",
