@@ -258,15 +258,25 @@
   </div>
 </div>
 
-<!-- TRADE-HISTORIE -->
-<div class="section open" id="sec-trades">
-  <div class="sec-head" data-toggle="sec-trades">
-    <div class="sec-title"><span class="ico">📊</span>Trade-Historie</div>
-    <span class="sec-meta"><span id="tradesSummary">—</span><span class="sec-chev">›</span></span>
+<!-- PERFORMANCE -->
+<div class="section open" id="sec-perf">
+  <div class="sec-head" data-toggle="sec-perf">
+    <div class="sec-title"><span class="ico">📊</span>Performance</div>
+    <span class="sec-meta"><span id="perfSummary">—</span><span class="sec-chev">›</span></span>
   </div>
   <div class="sec-body">
-    <div class="stat-grid" id="tradesStats"></div>
-    <div id="tradesList"></div>
+    <div class="stat-grid" id="perfStats"></div>
+  </div>
+</div>
+
+<!-- LAUFENDE TRADES -->
+<div class="section open" id="sec-open">
+  <div class="sec-head" data-toggle="sec-open">
+    <div class="sec-title"><span class="ico">🔥</span>Laufende Trades</div>
+    <span class="sec-meta"><span id="openCount">0</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="openList"></div>
     <button class="btn btn-secondary" id="addTradeBtn" style="margin-top:10px">➕ Trade manuell hinzufügen</button>
     <div id="addTradeForm" style="display:none;margin-top:10px;background:var(--surface-2);border-radius:12px;padding:14px">
       <div class="mt-grid">
@@ -284,6 +294,17 @@
         <button class="btn btn-primary" id="atSaveBtn">✓ Speichern</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ABGESCHLOSSENE TRADES -->
+<div class="section" id="sec-closed">
+  <div class="sec-head" data-toggle="sec-closed">
+    <div class="sec-title"><span class="ico">✅</span>Abgeschlossene Trades</div>
+    <span class="sec-meta"><span id="closedCount">0</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="closedList"></div>
   </div>
 </div>
 
@@ -776,75 +797,87 @@ function calcPnl(t, px) {
   return pts * 100 * (t.qty || 1); // MCL = $100/pt
 }
 
-function renderTrades() {
-  const list = $('tradesList');
-  if (!trades.length) {
-    list.innerHTML = '<div class="mt-empty">Noch keine Trades im Journal</div>';
-    $('tradesStats').innerHTML = '';
-    $('tradesSummary').textContent = '0 Trades';
-    return;
-  }
-  const px = currentPrice;
-  let openPnl = 0, realPnl = 0, wins = 0, losses = 0;
-  trades.forEach(t => {
-    if (t.status === 'open') {
-      t._livePnl = calcPnl(t, px);
-      openPnl += t._livePnl;
-    } else {
-      realPnl += (t.pnl || 0);
-      if ((t.pnl || 0) > 0) wins++; else if ((t.pnl || 0) < 0) losses++;
-    }
-  });
-  const total = openPnl + realPnl;
-  const closedCount = wins + losses;
-  const winRate = closedCount ? Math.round((wins / closedCount) * 100) : 0;
+function tradeRow(t, isOpen, px) {
+  const pnl = isOpen ? calcPnl(t, px) : (t.pnl || 0);
+  const cls = pnl>0.01?'up':pnl<-0.01?'down':'flat';
+  const arrow = t.direction==='long'?'▲':'▼';
+  const dirCol = t.direction==='long'?'var(--green)':'var(--red)';
+  const dateStr = new Date(t.ts).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'});
+  return `
+    <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:8px;border-left:3px solid ${dirCol}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:${dirCol};font-weight:700">${arrow} ${t.asset||'WTI'}</span>
+          <span style="font-size:11px;color:var(--muted)">${dateStr}</span>
+          ${isOpen ? '<span style="font-size:10px;padding:2px 6px;background:rgba(10,132,255,.15);color:var(--blue);border-radius:8px;font-weight:600">OFFEN</span>' : '<span style="font-size:10px;padding:2px 6px;background:var(--surface-3);color:var(--muted);border-radius:8px;font-weight:600">ZU</span>'}
+        </div>
+        <div class="${cls==='up'?'stat-val up':cls==='down'?'stat-val down':''}" style="font-weight:700;font-variant-numeric:tabular-nums;font-size:16px">${fmtUsd(pnl)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span>Entry: <b style="color:var(--text)">${fmt(t.entry)}</b></span>
+        <span>${isOpen ? 'Now' : 'Exit'}: <b style="color:var(--text)">${fmt(isOpen?px:t.exit)}</b></span>
+        <span>Stop: <b style="color:var(--red)">${fmt(t.stop)}</b></span>
+        <span>TP1: <b style="color:var(--green)">${fmt(t.tp1)}</b></span>
+      </div>
+      ${isOpen ? `
+      <div id="close-${t.id}" style="display:none;margin-top:10px;padding:10px;background:var(--surface);border-radius:10px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;display:block;margin-bottom:4px">Exit-Preis</label>
+        <input id="exit-${t.id}" type="number" step="0.01" inputmode="decimal" placeholder="${px?px.toFixed(2):'0.00'}" style="margin-bottom:8px">
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn btn-secondary" onclick="toggleClose(${t.id})">Abbrechen</button>
+          <button class="btn btn-success" onclick="confirmClose(${t.id})">✓ Schliessen</button>
+        </div>
+      </div>` : ''}
+      <div style="display:flex;gap:6px;margin-top:10px">
+        ${isOpen ? `<button class="btn btn-secondary" style="padding:8px;font-size:12px" onclick="toggleClose(${t.id})">✓ Trade schliessen</button>` : ''}
+        <button class="btn btn-secondary" style="padding:8px;font-size:12px;background:rgba(255,69,58,.08);color:var(--red);border-color:rgba(255,69,58,.2)" onclick="deleteTrade(${t.id})">🗑</button>
+      </div>
+    </div>
+  `;
+}
 
-  $('tradesSummary').textContent = `${fmtUsd(total)} · ${trades.length}T`;
-  $('tradesStats').innerHTML = `
+function renderTrades() {
+  const px = currentPrice;
+  const open = trades.filter(t=>t.status==='open');
+  const closed = trades.filter(t=>t.status!=='open');
+
+  // PERFORMANCE
+  let openPnl = 0, realPnl = 0, wins = 0, losses = 0;
+  open.forEach(t => { openPnl += calcPnl(t, px); });
+  closed.forEach(t => { realPnl += (t.pnl||0); if ((t.pnl||0)>0) wins++; else if ((t.pnl||0)<0) losses++; });
+  const total = openPnl + realPnl;
+  const winRate = closed.length ? Math.round((wins/closed.length)*100) : 0;
+
+  $('perfSummary').textContent = fmtUsd(total);
+  $('perfStats').innerHTML = `
     <div class="stat"><div class="stat-lbl">Offen P/L</div><div class="stat-val ${openPnl>=0?'up':'down'}">${fmtUsd(openPnl)}</div></div>
     <div class="stat"><div class="stat-lbl">Realisiert</div><div class="stat-val ${realPnl>=0?'up':'down'}">${fmtUsd(realPnl)}</div></div>
     <div class="stat"><div class="stat-lbl">Gesamt</div><div class="stat-val ${total>=0?'up':'down'}">${fmtUsd(total)}</div></div>
     <div class="stat"><div class="stat-lbl">Win Rate</div><div class="stat-val">${winRate}% <span style="font-size:11px;color:var(--muted);font-weight:500">(${wins}W/${losses}L)</span></div></div>
   `;
 
-  list.innerHTML = trades.slice().reverse().map(t => {
-    const isOpen = t.status === 'open';
-    const pnl = isOpen ? (t._livePnl||0) : (t.pnl||0);
-    const cls = pnl>0.01?'up':pnl<-0.01?'down':'flat';
-    const arrow = t.direction==='long'?'▲':'▼';
-    const dirCol = t.direction==='long'?'var(--green)':'var(--red)';
-    const dateStr = new Date(t.ts).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'});
-    return `
-      <div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:8px;border-left:3px solid ${dirCol}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="color:${dirCol};font-weight:700">${arrow} ${t.asset||'WTI'}</span>
-            <span style="font-size:11px;color:var(--muted)">${dateStr}</span>
-            ${isOpen ? '<span style="font-size:10px;padding:2px 6px;background:rgba(10,132,255,.15);color:var(--blue);border-radius:8px;font-weight:600">OFFEN</span>' : '<span style="font-size:10px;padding:2px 6px;background:var(--surface-3);color:var(--muted);border-radius:8px;font-weight:600">ZU</span>'}
-          </div>
-          <div class="${cls==='up'?'stat-val up':cls==='down'?'stat-val down':''}" style="font-weight:700;font-variant-numeric:tabular-nums;font-size:16px">${fmtUsd(pnl)}</div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <span>Entry: <b style="color:var(--text)">${fmt(t.entry)}</b></span>
-          <span>${isOpen ? 'Now' : 'Exit'}: <b style="color:var(--text)">${fmt(isOpen?px:t.exit)}</b></span>
-          <span>Stop: <b style="color:var(--red)">${fmt(t.stop)}</b></span>
-          <span>TP1: <b style="color:var(--green)">${fmt(t.tp1)}</b></span>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:10px">
-          ${isOpen ? `<button class="btn btn-secondary" style="padding:8px;font-size:12px" onclick="closeTrade(${t.id})">✓ Schliessen</button>` : ''}
-          <button class="btn btn-secondary" style="padding:8px;font-size:12px;background:rgba(255,69,58,.08);color:var(--red);border-color:rgba(255,69,58,.2)" onclick="deleteTrade(${t.id})">🗑 Löschen</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  // OPEN TRADES
+  $('openCount').textContent = open.length + (open.length===1?' Trade':' Trades');
+  $('openList').innerHTML = open.length ? open.slice().reverse().map(t=>tradeRow(t,true,px)).join('') : '<div class="mt-empty">Keine offenen Trades — füge einen hinzu ↓</div>';
+
+  // CLOSED TRADES
+  $('closedCount').textContent = closed.length + (closed.length===1?' Trade':' Trades');
+  $('closedList').innerHTML = closed.length ? closed.slice().reverse().map(t=>tradeRow(t,false,px)).join('') : '<div class="mt-empty">Noch keine abgeschlossenen Trades</div>';
 }
 
-window.closeTrade = function(id) {
+window.toggleClose = function(id) {
+  const el = $('close-'+id); if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display === 'block') {
+    const inp = $('exit-'+id); if (inp && currentPrice && !inp.value) inp.value = currentPrice.toFixed(2);
+  }
+};
+
+window.confirmClose = function(id) {
   const t = trades.find(x=>x.id===id); if(!t) return;
-  const exitStr = prompt('Exit-Preis (leer = aktueller Live-Preis):', currentPrice ? currentPrice.toFixed(2) : '');
-  if (exitStr === null) return;
-  const exit = parseFloat(exitStr) || currentPrice;
-  if (!exit) { toast('Kein Preis angegeben'); return; }
+  const inp = $('exit-'+id);
+  const exit = parseFloat(inp?.value) || currentPrice;
+  if (!exit) { toast('Exit-Preis fehlt'); return; }
   t.exit = exit;
   t.status = 'closed';
   t.pnl = calcPnl(t, exit);
