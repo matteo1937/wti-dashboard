@@ -325,21 +325,6 @@
   </div>
 </div>
 
-<!-- TRADINGVIEW CHART -->
-<div class="section open" id="sec-chart">
-  <div class="sec-head" data-toggle="sec-chart">
-    <div class="sec-title"><span class="ico">📈</span>Chart</div>
-    <span class="sec-chev">›</span>
-  </div>
-  <div class="sec-body">
-    <div class="tv-wrap">
-      <div class="tradingview-widget-container">
-        <div id="tradingview_chart"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- SESSIONS -->
 <div class="section" id="sec-sessions">
   <div class="sec-head" data-toggle="sec-sessions">
@@ -412,7 +397,7 @@
   <div class="nav-inner">
     <button class="nav-btn active" data-scroll="hero"><span class="ico">⚡</span>Live</button>
     <button class="nav-btn" data-scroll="signal"><span class="ico">🎯</span>Signal</button>
-    <button class="nav-btn" data-scroll="sec-chart"><span class="ico">📈</span>Chart</button>
+    <button class="nav-btn" data-scroll="sec-open"><span class="ico">🔥</span>Trades</button>
     <button class="nav-btn" data-scroll="sec-news"><span class="ico">📰</span>News</button>
     <button class="nav-btn" data-scroll="sec-bt"><span class="ico">🧪</span>BT</button>
   </div>
@@ -1073,19 +1058,6 @@ ${lastAnalysis.tips ? '💡 ' + lastAnalysis.tips : ''}`;
   lastAnalysis = null; lastImageData = null;
 }
 
-// ── TRADINGVIEW ──
-const tv = document.createElement('script');
-tv.src = 'https://s3.tradingview.com/tv.js';
-tv.onload = ()=>{
-  new TradingView.widget({
-    autosize:true, symbol:'TVC:USOIL', interval:'15',
-    timezone:'Europe/Zurich', theme:'dark', style:'1', locale:'de',
-    enable_publishing:false, hide_top_toolbar:false, hide_legend:false,
-    save_image:false, container_id:'tradingview_chart',
-    studies:['MASimple@tv-basicstudies','RSI@tv-basicstudies'],
-  });
-};
-document.head.appendChild(tv);
 </script>
 </body>
 </html>
