@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#0a0a0b">
 <title>WTI · Live</title>
 <link rel="preconnect" href="https://stooq.com">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzBhMGEwYiIgcng9IjM4Ii8+PHRleHQgeD0iOTYiIHk9IjExNCIgZm9udC1mYW1pbHk9Ii1hcHBsZS1zeXN0ZW0sc2Fucy1zZXJpZiIgZm9udC1zaXplPSI2MCIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzMwZDE1OCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+V1RJPC90ZXh0Pjwvc3ZnPg==">
 <style>
   :root{
     --bg:#0a0a0b; --surface:#131316; --surface-2:#1c1c20; --surface-3:#26262c;
@@ -183,6 +185,76 @@
   .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:skel 1.5s infinite;border-radius:8px}
   @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+  /* LIGHT MODE */
+  html[data-theme="light"]{
+    --bg:#f5f5f7; --surface:#ffffff; --surface-2:#f0f0f3; --surface-3:#e5e5e8;
+    --border:rgba(0,0,0,.08); --border-strong:rgba(0,0,0,.18);
+    --text:#1d1d1f; --muted:#6e6e73; --muted-2:#8e8e93;
+  }
+  html[data-theme="light"] .nav{background:rgba(245,245,247,.85)}
+  html[data-theme="light"] .hero{background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.6) 100%)}
+
+  /* CORRELATION */
+  .corr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .corr{background:var(--surface-2);border-radius:12px;padding:12px;text-align:center}
+  .corr-sym{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px}
+  .corr-price{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:3px}
+  .corr-chg{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .corr-chg.up{color:var(--green)} .corr-chg.down{color:var(--red)}
+
+  /* CALENDAR */
+  .cal-item{display:flex;gap:10px;padding:10px;background:var(--surface-2);border-radius:10px;margin-bottom:6px;align-items:center}
+  .cal-badge{flex-shrink:0;width:48px;text-align:center;padding:6px 4px;border-radius:8px;background:var(--surface-3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .cal-badge.high{background:rgba(255,69,58,.15);color:var(--red)}
+  .cal-badge.med{background:rgba(255,159,10,.15);color:var(--orange)}
+  .cal-title{font-size:13px;font-weight:600;flex:1}
+  .cal-time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .cal-cd{font-size:11px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;margin-left:auto}
+
+  /* ALERTS */
+  .alert-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface-2);border-radius:10px;margin-bottom:6px}
+  .alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .alert-dot.above{background:var(--green)} .alert-dot.below{background:var(--red)}
+  .alert-price{font-weight:700;font-variant-numeric:tabular-nums;flex:1}
+  .alert-x{color:var(--muted);cursor:pointer;font-size:18px;padding:0 6px}
+
+  /* CHECKLIST */
+  .chk-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface-2);border-radius:10px;margin-bottom:6px;cursor:pointer;user-select:none}
+  .chk-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:all .15s}
+  .chk-item.done .chk-box{background:var(--green);border-color:var(--green)}
+  .chk-item.done .chk-lbl{color:var(--muted);text-decoration:line-through}
+  .chk-lbl{font-size:13px;flex:1}
+
+  /* DISCIPLINE SCORE */
+  .disc-ring{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface-2);border-radius:12px}
+  .disc-circle{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+  .disc-meta{flex:1}
+  .disc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:2px}
+  .disc-val{font-size:15px;font-weight:600}
+  .streak{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+  .streak-dot{width:10px;height:10px;border-radius:3px;background:var(--surface-3)}
+  .streak-dot.win{background:var(--green)} .streak-dot.loss{background:var(--red)}
+
+  /* EIA */
+  .eia-wrap{background:var(--surface-2);border-radius:12px;padding:14px}
+  .eia-big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:4px}
+  .eia-delta{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  .eia-delta.up{color:var(--red)} /* build = bearish */
+  .eia-delta.down{color:var(--green)}
+
+  /* PILL ROW (small action buttons) */
+  .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .pill-btn{padding:8px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s}
+  .pill-btn:active{background:var(--surface-3)}
+
+  /* MODAL */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+  .modal.show{display:flex}
+  .modal-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;max-width:440px;width:100%;max-height:80vh;overflow-y:auto}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .modal-title{font-size:16px;font-weight:600}
+  .modal-x{color:var(--muted);cursor:pointer;font-size:22px;padding:0 6px}
+
   /* RESPONSIVE */
   @media(min-width:600px){
     body{max-width:680px;padding-bottom:24px}
@@ -198,7 +270,11 @@
     <span class="brand-dot"></span>
     WTI <span style="color:var(--muted);font-weight:400">·</span> <span style="color:var(--muted);font-weight:400">Crude Oil</span>
   </div>
-  <div class="clock" id="clock">--:--:--</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button id="themeBtn" title="Theme" style="font-size:16px;padding:4px 8px;border-radius:8px">🌙</button>
+    <button id="installBtn" title="App installieren" style="display:none;font-size:12px;padding:5px 10px;border-radius:8px;background:var(--blue);color:#fff;font-weight:600">📲 Install</button>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
 </div>
 
 <!-- HERO PRICE -->
@@ -255,6 +331,107 @@
   <div class="btn-row">
     <button class="btn btn-secondary" id="useSignalBtn">📋 Signal übernehmen</button>
     <button class="btn btn-primary" id="saveTradeBtn">✓ Speichern</button>
+  </div>
+</div>
+
+<!-- RISK CALCULATOR -->
+<div class="section" id="sec-risk">
+  <div class="sec-head" data-toggle="sec-risk">
+    <div class="sec-title"><span class="ico">🧮</span>Risk Calculator</div>
+    <span class="sec-meta"><span id="riskSummary">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div class="mt-grid">
+      <div><label>Konto $</label><input id="rcBal" type="number" step="100" value="10000" inputmode="decimal"></div>
+      <div><label>Risk %</label><input id="rcPct" type="number" step="0.1" value="1" inputmode="decimal"></div>
+      <div><label>Entry $</label><input id="rcEntry" type="number" step="0.01" inputmode="decimal"></div>
+    </div>
+    <div class="mt-grid" style="margin-top:8px">
+      <div><label>Stop $</label><input id="rcStop" type="number" step="0.01" inputmode="decimal"></div>
+      <div><label>TP $</label><input id="rcTp" type="number" step="0.01" inputmode="decimal"></div>
+      <div><label>$/Punkt</label><input id="rcTick" type="number" step="1" value="100" inputmode="decimal"></div>
+    </div>
+    <div id="rcResult" style="margin-top:14px"></div>
+    <button class="btn btn-secondary" id="rcFromSignal" style="margin-top:8px">📋 Werte aus Signal</button>
+  </div>
+</div>
+
+<!-- PRE-TRADE CHECKLIST -->
+<div class="section" id="sec-chk">
+  <div class="sec-head" data-toggle="sec-chk">
+    <div class="sec-title"><span class="ico">✅</span>Pre-Trade Checklist</div>
+    <span class="sec-meta"><span id="chkSummary">0/6</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="chkList"></div>
+    <button class="btn btn-secondary" id="chkReset" style="margin-top:8px">↺ Reset</button>
+  </div>
+</div>
+
+<!-- PRICE ALERTS -->
+<div class="section" id="sec-alerts">
+  <div class="sec-head" data-toggle="sec-alerts">
+    <div class="sec-title"><span class="ico">🔔</span>Price Alerts</div>
+    <span class="sec-meta"><span id="alertsCount">0</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="alertsList"></div>
+    <div class="mt-grid" style="margin-top:8px">
+      <div><label>Level $</label><input id="alPrice" type="number" step="0.01" inputmode="decimal"></div>
+      <div><label>Typ</label><select id="alDir"><option value="above">Über</option><option value="below">Unter</option></select></div>
+      <div><label>Sound</label><select id="alSnd"><option value="1">An</option><option value="0">Aus</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="alNotif">🔔 Push aktivieren</button>
+      <button class="btn btn-primary" id="alAdd">+ Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- CORRELATION -->
+<div class="section" id="sec-corr">
+  <div class="sec-head" data-toggle="sec-corr">
+    <div class="sec-title"><span class="ico">🔗</span>Korrelationen</div>
+    <span class="sec-meta"><span id="corrSummary">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div class="corr-grid" id="corrGrid"></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">
+      DXY ↑ = negativ für Öl · SPX ↑ = Risk-On = meist positiv · Gold = Inflation-Hedge
+    </div>
+  </div>
+</div>
+
+<!-- EIA INVENTORY -->
+<div class="section" id="sec-eia">
+  <div class="sec-head" data-toggle="sec-eia">
+    <div class="sec-title"><span class="ico">🛢</span>EIA Crude Inventories</div>
+    <span class="sec-meta"><span id="eiaSummary">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="eiaBox"></div>
+  </div>
+</div>
+
+<!-- ECONOMIC CALENDAR -->
+<div class="section" id="sec-cal">
+  <div class="sec-head" data-toggle="sec-cal">
+    <div class="sec-title"><span class="ico">📅</span>Wirtschaftskalender</div>
+    <span class="sec-meta"><span id="calNext">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="calList"></div>
+  </div>
+</div>
+
+<!-- DISCIPLINE SCORE -->
+<div class="section" id="sec-disc">
+  <div class="sec-head" data-toggle="sec-disc">
+    <div class="sec-title"><span class="ico">🏆</span>Disziplin & Streak</div>
+    <span class="sec-meta"><span id="discSummary">—</span><span class="sec-chev">›</span></span>
+  </div>
+  <div class="sec-body">
+    <div id="discBox"></div>
   </div>
 </div>
 
@@ -1056,7 +1233,429 @@ ${lastAnalysis.tips ? '💡 ' + lastAnalysis.tips : ''}`;
   $('uploadPreview').style.display = 'none';
   $('tradeFile').value = '';
   lastAnalysis = null; lastImageData = null;
+  // Trigger AI Post-Mortem prompt later when this trade is closed
 }
+
+// ═══════════════════════════════════════════════════════════════════
+//  NEUE FEATURES — Theme, PWA, Risk, Checklist, Alerts, Sounds,
+//  Correlation, EIA, Calendar, Discipline, CSV, Post-Mortem, Report
+// ═══════════════════════════════════════════════════════════════════
+
+// ── THEME TOGGLE ──
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.dataset.theme = savedTheme;
+$('themeBtn').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+$('themeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('theme', next);
+  $('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
+  document.querySelector('meta[name="theme-color"]').content = next === 'dark' ? '#0a0a0b' : '#f5f5f7';
+});
+
+// ── PWA — Service Worker + Install ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW',e));
+}
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  $('installBtn').style.display = 'inline-flex';
+});
+$('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) { toast('Im Browser-Menü „Zum Homescreen“ wählen'); return; }
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $('installBtn').style.display = 'none';
+});
+
+// ── SOUND ──
+let audioCtx = null;
+function beep(freq=800, dur=0.15, type='sine', vol=0.3) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+function chime() { beep(880,.12,'sine',.25); setTimeout(()=>beep(1320,.14,'sine',.25),130); }
+
+// ── RISK CALCULATOR ──
+function calcRisk() {
+  const bal = +$('rcBal').value, pct = +$('rcPct').value;
+  const e = +$('rcEntry').value, s = +$('rcStop').value, tp = +$('rcTp').value, tick = +$('rcTick').value;
+  if (!bal || !pct || !e || !s || !tick) { $('rcResult').innerHTML = '<div class="mt-empty">Felder ausfüllen…</div>'; return; }
+  const riskUsd = bal * (pct/100);
+  const riskPts = Math.abs(e - s);
+  const contracts = Math.floor(riskUsd / (riskPts * tick));
+  const realRisk = contracts * riskPts * tick;
+  const rewardPts = tp ? Math.abs(tp - e) : 0;
+  const rrPot = tp ? (rewardPts / riskPts).toFixed(2) : '—';
+  const rewardUsd = tp ? contracts * rewardPts * tick : 0;
+  $('riskSummary').textContent = contracts + ' × · $' + realRisk.toFixed(0);
+  $('rcResult').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-lbl">Optimal</div><div class="stat-val">${contracts} Kontrakte</div></div>
+      <div class="stat"><div class="stat-lbl">Risiko echt</div><div class="stat-val down">$${realRisk.toFixed(2)}</div></div>
+      <div class="stat"><div class="stat-lbl">Risiko/Pt</div><div class="stat-val">${riskPts.toFixed(2)} pt</div></div>
+      <div class="stat"><div class="stat-lbl">R:R Pot.</div><div class="stat-val">1:${rrPot}</div></div>
+      ${tp?`<div class="stat" style="grid-column:1/-1"><div class="stat-lbl">Reward bei TP</div><div class="stat-val up">+$${rewardUsd.toFixed(2)}</div></div>`:''}
+    </div>`;
+}
+['rcBal','rcPct','rcEntry','rcStop','rcTp','rcTick'].forEach(id => $(id).addEventListener('input', calcRisk));
+$('rcFromSignal').addEventListener('click', () => {
+  if (!signal || !signal.entry) { toast('Kein Signal'); return; }
+  $('rcEntry').value = signal.entry;
+  $('rcStop').value = signal.stop;
+  $('rcTp').value = signal.target1;
+  calcRisk();
+});
+calcRisk();
+
+// ── PRE-TRADE CHECKLIST ──
+const CHK_ITEMS = [
+  { id:'bias',  lbl:'Trade in Richtung Tagesbias' },
+  { id:'level', lbl:'Über/unter Pivot · VWAP · 200 EMA' },
+  { id:'rr',    lbl:'R:R ≥ 2.0' },
+  { id:'news',  lbl:'Keine High-Impact News in nächsten 30 Min' },
+  { id:'risk',  lbl:'Max 1% Konto-Risiko' },
+  { id:'plan',  lbl:'Stop & TP klar definiert' },
+];
+let chk = JSON.parse(localStorage.getItem('chk') || '{}');
+function renderChk() {
+  $('chkList').innerHTML = CHK_ITEMS.map(c => `
+    <div class="chk-item ${chk[c.id]?'done':''}" data-chk="${c.id}">
+      <div class="chk-box">${chk[c.id]?'✓':''}</div>
+      <div class="chk-lbl">${c.lbl}</div>
+    </div>`).join('');
+  document.querySelectorAll('[data-chk]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.chk; chk[id] = !chk[id];
+    localStorage.setItem('chk', JSON.stringify(chk));
+    renderChk();
+  }));
+  const done = CHK_ITEMS.filter(c=>chk[c.id]).length;
+  $('chkSummary').textContent = done+'/'+CHK_ITEMS.length;
+}
+$('chkReset').addEventListener('click', () => { chk = {}; localStorage.setItem('chk','{}'); renderChk(); toast('Checklist zurückgesetzt'); });
+renderChk();
+
+// ── PRICE ALERTS ──
+let alerts = JSON.parse(localStorage.getItem('alerts') || '[]');
+function renderAlerts() {
+  $('alertsCount').textContent = alerts.length;
+  $('alertsList').innerHTML = alerts.length ? alerts.map(a => `
+    <div class="alert-item">
+      <div class="alert-dot ${a.dir}"></div>
+      <div class="alert-price">${a.dir==='above'?'≥':'≤'} $${a.price.toFixed(2)}</div>
+      <div style="font-size:11px;color:var(--muted)">${a.snd?'🔊':'🔇'}</div>
+      <div class="alert-x" data-rm="${a.id}">✕</div>
+    </div>`).join('') : '<div class="mt-empty">Keine Alerts gesetzt</div>';
+  document.querySelectorAll('[data-rm]').forEach(el => el.addEventListener('click', () => {
+    alerts = alerts.filter(a => a.id != el.dataset.rm);
+    localStorage.setItem('alerts', JSON.stringify(alerts));
+    renderAlerts();
+  }));
+}
+$('alAdd').addEventListener('click', () => {
+  const p = parseFloat($('alPrice').value);
+  if (!p) { toast('Preis fehlt'); return; }
+  alerts.push({ id: Date.now(), price: p, dir: $('alDir').value, snd: $('alSnd').value==='1', triggered: false });
+  localStorage.setItem('alerts', JSON.stringify(alerts));
+  $('alPrice').value = '';
+  renderAlerts(); toast('Alert gesetzt');
+});
+$('alNotif').addEventListener('click', async () => {
+  if (!('Notification' in window)) { toast('Notifications nicht unterstützt'); return; }
+  const p = await Notification.requestPermission();
+  toast(p === 'granted' ? '🔔 Push aktiviert' : 'Abgelehnt');
+});
+function checkAlerts(px) {
+  if (px == null) return;
+  let fired = false;
+  alerts.forEach(a => {
+    if (a.triggered) return;
+    if ((a.dir==='above' && px >= a.price) || (a.dir==='below' && px <= a.price)) {
+      a.triggered = true; fired = true;
+      toast(`🔔 Alert: WTI ${a.dir==='above'?'über':'unter'} $${a.price.toFixed(2)} (jetzt $${px.toFixed(2)})`);
+      if (a.snd) chime();
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('WTI Alert', { body: `Preis ${a.dir==='above'?'≥':'≤'} $${a.price.toFixed(2)} — jetzt $${px.toFixed(2)}`, tag: 'wti-'+a.id });
+      }
+      if ('vibrate' in navigator) navigator.vibrate([200,80,200]);
+    }
+  });
+  if (fired) {
+    alerts = alerts.filter(a => !a.triggered);
+    localStorage.setItem('alerts', JSON.stringify(alerts));
+    renderAlerts();
+  }
+}
+renderAlerts();
+
+// ── CORRELATION ──
+const CORR_SYMS = { 'dx.f':{name:'DXY',ico:'💵'}, '^spx':{name:'S&P 500',ico:'📈'}, 'gc.f':{name:'Gold',ico:'🥇'} };
+async function loadCorr() {
+  try {
+    const r = await fetch('/multiprice?s='+Object.keys(CORR_SYMS).join(',')+'&t='+Date.now());
+    const d = await r.json();
+    const cells = Object.entries(CORR_SYMS).map(([sym, meta]) => {
+      const x = d[sym]; if (!x || x.error) return `<div class="corr"><div class="corr-sym">${meta.ico} ${meta.name}</div><div class="corr-price">—</div></div>`;
+      const ch = x.close - x.open, pct = (ch/x.open)*100;
+      return `<div class="corr"><div class="corr-sym">${meta.ico} ${meta.name}</div>
+        <div class="corr-price">${x.close.toFixed(2)}</div>
+        <div class="corr-chg ${ch>=0?'up':'down'}">${ch>=0?'+':''}${pct.toFixed(2)}%</div></div>`;
+    }).join('');
+    $('corrGrid').innerHTML = cells;
+    const dxy = d['dx.f']; if (dxy && !dxy.error) {
+      const dxyChg = ((dxy.close-dxy.open)/dxy.open)*100;
+      $('corrSummary').textContent = 'DXY '+(dxyChg>=0?'+':'')+dxyChg.toFixed(2)+'%';
+    }
+  } catch(e) { console.warn(e); }
+}
+loadCorr(); setInterval(loadCorr, 60000);
+
+// ── EIA INVENTORY ──
+async function loadEIA() {
+  try {
+    const r = await fetch('/eia?t='+Date.now());
+    const d = await r.json();
+    if (d.stub || d.error) {
+      $('eiaBox').innerHTML = `<div class="mt-empty">${d.error||'Daten nicht verfügbar'}</div>`;
+      $('eiaSummary').textContent = '—'; return;
+    }
+    const dCls = d.delta_wk > 0 ? 'up' : 'down';
+    const sign = d.delta_wk > 0 ? '+' : '';
+    $('eiaSummary').textContent = sign + (d.delta_wk/1000).toFixed(1) + 'M bbl';
+    $('eiaBox').innerHTML = `
+      <div class="eia-wrap">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px">Woche endend ${d.period}</div>
+        <div class="eia-big">${(d.value/1000).toFixed(1)}M bbl</div>
+        <div class="eia-delta ${dCls}">${sign}${(d.delta_wk/1000).toFixed(2)}M Δ vs. Vorwoche · ${d.bias === 'bullish' ? '🟢 bullish' : '🔴 bearish'}</div>
+      </div>`;
+  } catch(e) { $('eiaBox').innerHTML = '<div class="mt-empty">Fehler beim Laden</div>'; }
+}
+loadEIA(); setInterval(loadEIA, 600000);
+
+// ── ECONOMIC CALENDAR ──
+async function loadCal() {
+  try {
+    const r = await fetch('/calendar?t='+Date.now());
+    const d = await r.json();
+    const evs = (d.events || []).slice(0, 10);
+    if (!evs.length) { $('calList').innerHTML = '<div class="mt-empty">Keine Termine</div>'; return; }
+    const now = Date.now();
+    $('calList').innerHTML = evs.map(e => {
+      const t = new Date(e.date), diffH = (t - now) / 3600000;
+      let cd = '';
+      if (diffH < 1) cd = Math.max(0,Math.round(diffH*60))+'m';
+      else if (diffH < 24) cd = Math.round(diffH)+'h';
+      else cd = Math.round(diffH/24)+'d';
+      const dStr = t.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}) + ' ' + t.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="cal-item">
+        <div class="cal-badge ${e.impact==='high'?'high':'med'}">${e.type}</div>
+        <div style="flex:1"><div class="cal-title">${e.title}</div><div class="cal-time">${dStr}</div></div>
+        <div class="cal-cd">${cd}</div></div>`;
+    }).join('');
+    const nextE = evs[0];
+    const t = new Date(nextE.date), diffH = (t - now)/3600000;
+    $('calNext').textContent = nextE.type + ' in ' + (diffH < 24 ? Math.round(diffH)+'h' : Math.round(diffH/24)+'d');
+  } catch(e) { $('calList').innerHTML = '<div class="mt-empty">Fehler beim Laden</div>'; }
+}
+loadCal(); setInterval(loadCal, 300000);
+
+// ── DISCIPLINE / STREAK ──
+function renderDiscipline() {
+  const closed = trades.filter(t => t.status !== 'open' && t.pnl != null);
+  if (!closed.length) { $('discBox').innerHTML = '<div class="mt-empty">Noch keine geschlossenen Trades</div>'; $('discSummary').textContent = '—'; return; }
+  const sorted = closed.slice().sort((a,b) => (a.closedAt||a.ts) - (b.closedAt||b.ts));
+  // Current streak
+  let streak = 0, streakType = null;
+  for (let i = sorted.length-1; i >= 0; i--) {
+    const w = sorted[i].pnl > 0;
+    if (streakType === null) { streakType = w; streak = 1; }
+    else if (streakType === w) streak++;
+    else break;
+  }
+  // Discipline score: avg of (winRate + R:R adherence + position-sizing consistency)
+  const wins = closed.filter(t => t.pnl > 0).length;
+  const winRate = (wins / closed.length) * 100;
+  const avgWin = wins ? sorted.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0)/wins : 0;
+  const losses = closed.filter(t => t.pnl <= 0).length;
+  const avgLoss = losses ? Math.abs(sorted.filter(t=>t.pnl<=0).reduce((s,t)=>s+t.pnl,0)/losses) : 1;
+  const rrRatio = avgWin / (avgLoss || 1);
+  const score = Math.min(100, Math.round(winRate * 0.5 + Math.min(rrRatio, 3) * 16.66));
+  const scoreCol = score >= 70 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
+  const dots = sorted.slice(-20).map(t => `<div class="streak-dot ${t.pnl>0?'win':'loss'}"></div>`).join('');
+  $('discSummary').textContent = score + '/100';
+  $('discBox').innerHTML = `
+    <div class="disc-ring">
+      <div class="disc-circle" style="background:${scoreCol}">${score}</div>
+      <div class="disc-meta">
+        <div class="disc-lbl">Disziplin-Score</div>
+        <div class="disc-val">${score >= 70 ? '🔥 Stark' : score >= 50 ? '👍 OK' : '⚠️ Verbesserungswürdig'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Streak: ${streak} ${streakType?'Wins':'Losses'} · Win-Rate ${winRate.toFixed(0)}% · Avg R:R ${rrRatio.toFixed(2)}</div>
+      </div>
+    </div>
+    <div style="margin-top:12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px">Letzte 20 Trades</div>
+    <div class="streak">${dots}</div></div>`;
+}
+
+// ── CSV EXPORT ──
+function exportCSV() {
+  if (!trades.length) { toast('Keine Trades zum Exportieren'); return; }
+  const head = ['ID','Datum','Asset','Direction','Entry','Stop','TP1','TP2','Qty','Exit','PnL','Status','ClosedAt','Quality'];
+  const rows = trades.map(t => [
+    t.id,
+    new Date(t.ts).toISOString(),
+    t.asset||'WTI', t.direction, t.entry, t.stop||'', t.tp1||'', t.tp2||'', t.qty||1,
+    t.exit||'', t.pnl||'', t.status, t.closedAt?new Date(t.closedAt).toISOString():'', t.quality||''
+  ]);
+  const csv = [head, ...rows].map(r => r.map(c => `"${(''+c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wti-trades-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('CSV exportiert');
+}
+
+// ── MONTHLY REPORT ──
+function showMonthlyReport() {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const monthly = trades.filter(t => t.status !== 'open' && (t.closedAt||t.ts) >= monthStart && t.pnl != null);
+  const wins = monthly.filter(t => t.pnl > 0);
+  const losses = monthly.filter(t => t.pnl <= 0);
+  const total = monthly.reduce((s,t)=>s+(t.pnl||0), 0);
+  const winRate = monthly.length ? (wins.length/monthly.length*100).toFixed(0) : 0;
+  const avgWin = wins.length ? wins.reduce((s,t)=>s+t.pnl,0)/wins.length : 0;
+  const avgLoss = losses.length ? Math.abs(losses.reduce((s,t)=>s+t.pnl,0)/losses.length) : 0;
+  const best = monthly.length ? Math.max(...monthly.map(t=>t.pnl)) : 0;
+  const worst = monthly.length ? Math.min(...monthly.map(t=>t.pnl)) : 0;
+  const monthLabel = now.toLocaleDateString('de-CH',{month:'long',year:'numeric'});
+  $('modalTitle').textContent = '📊 Monatsreport · ' + monthLabel;
+  $('modalBody').innerHTML = monthly.length ? `
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-lbl">Trades</div><div class="stat-val">${monthly.length}</div></div>
+      <div class="stat"><div class="stat-lbl">Win Rate</div><div class="stat-val">${winRate}%</div></div>
+      <div class="stat"><div class="stat-lbl">PnL</div><div class="stat-val ${total>=0?'up':'down'}">${fmtUsd(total)}</div></div>
+      <div class="stat"><div class="stat-lbl">Avg Win</div><div class="stat-val up">${fmtUsd(avgWin)}</div></div>
+      <div class="stat"><div class="stat-lbl">Avg Loss</div><div class="stat-val down">${fmtUsd(-avgLoss)}</div></div>
+      <div class="stat"><div class="stat-lbl">Profit Factor</div><div class="stat-val">${avgLoss?(avgWin*wins.length/(avgLoss*losses.length||1)).toFixed(2):'∞'}</div></div>
+      <div class="stat"><div class="stat-lbl">Best Trade</div><div class="stat-val up">${fmtUsd(best)}</div></div>
+      <div class="stat"><div class="stat-lbl">Worst</div><div class="stat-val down">${fmtUsd(worst)}</div></div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:var(--surface-2);border-radius:10px;font-size:13px;line-height:1.5">
+      ${total>0 ? '🎯 Profitabler Monat — bleib diszipliniert.' : '⚠️ Verlustmonat — Setup-Qualität & Risk-Management prüfen.'}
+    </div>
+    <button class="btn btn-secondary" id="reportCsvBtn" style="margin-top:12px">📥 Als CSV exportieren</button>
+  ` : '<div class="mt-empty">Keine Trades diesen Monat</div>';
+  $('modal').classList.add('show');
+  const csvBtn = $('reportCsvBtn'); if (csvBtn) csvBtn.addEventListener('click', exportCSV);
+}
+
+// ── POST-MORTEM (AI on close) ──
+async function postMortem(t) {
+  let pwd = sessionStorage.getItem('uploadPwd');
+  if (!pwd) { pwd = prompt('Passwort für KI-Analyse:'); if (!pwd) return; sessionStorage.setItem('uploadPwd', pwd); }
+  $('modalTitle').textContent = '🧠 Post-Mortem';
+  $('modalBody').innerHTML = '<div class="mt-empty">🤖 KI analysiert Trade…</div>';
+  $('modal').classList.add('show');
+  try {
+    const r = await fetch('/postmortem', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd, trade: t }),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) {
+      if (r.status === 401) sessionStorage.removeItem('uploadPwd');
+      $('modalBody').innerHTML = `<div style="color:var(--red);padding:14px">❌ ${d.error||'Fehler'}</div>`;
+      return;
+    }
+    const gradeCol = d.grade === 'A' ? 'var(--green)' : d.grade === 'B' ? 'var(--green)' : d.grade === 'C' ? 'var(--orange)' : 'var(--red)';
+    $('modalBody').innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div style="width:56px;height:56px;border-radius:14px;background:${gradeCol};color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800">${d.grade}</div>
+        <div style="flex:1"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Bewertung</div>
+        <div style="font-size:13px;line-height:1.5">${d.summary}</div></div>
+      </div>
+      ${d.good?.length?`<div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px">✓ Gut gemacht</div><div style="margin-bottom:14px">${d.good.map(x=>`<div style="font-size:13px;padding:4px 0;color:var(--text)">• ${x}</div>`).join('')}</div>`:''}
+      ${d.bad?.length?`<div style="font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px">✗ Verbesserungspunkte</div><div style="margin-bottom:14px">${d.bad.map(x=>`<div style="font-size:13px;padding:4px 0;color:var(--text)">• ${x}</div>`).join('')}</div>`:''}
+      ${d.lesson?`<div style="padding:12px;background:rgba(10,132,255,.1);border-radius:10px;font-size:13px;line-height:1.5"><b style="color:var(--blue)">💡 Lektion:</b> ${d.lesson}</div>`:''}
+    `;
+    // Save into journal
+    journal.push({ t: Date.now(), text: `🧠 Post-Mortem [${d.grade}] ${d.summary}\n${d.lesson?'💡 '+d.lesson:''}` });
+    localStorage.setItem('jr', JSON.stringify(journal));
+    renderJournal();
+  } catch(e) { $('modalBody').innerHTML = '<div style="color:var(--red)">Netzwerk-Fehler</div>'; }
+}
+window.postMortem = postMortem;
+
+// Hook into confirmClose to offer post-mortem
+const origConfirm = window.confirmClose;
+window.confirmClose = function(id) {
+  origConfirm(id);
+  const t = trades.find(x => x.id === id);
+  if (t && t.status === 'closed') {
+    setTimeout(() => {
+      if (confirm('🧠 KI Post-Mortem für diesen Trade starten? (~$0.01)')) postMortem(t);
+    }, 400);
+    renderDiscipline();
+  }
+};
+
+// ── MODAL ──
+const modalHtml = `
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">—</div>
+      <div class="modal-x" id="modalX">✕</div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>`;
+document.body.insertAdjacentHTML('beforeend', modalHtml);
+$('modalX').addEventListener('click', () => $('modal').classList.remove('show'));
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') $('modal').classList.remove('show'); });
+
+// ── PERFORMANCE-CARD: CSV + Report Buttons ──
+function injectPerfActions() {
+  const head = document.querySelector('#sec-perf .sec-body');
+  if (!head || head.querySelector('.pill-row')) return;
+  const row = document.createElement('div');
+  row.className = 'pill-row';
+  row.innerHTML = `
+    <button class="pill-btn" id="btnReport">📊 Monatsreport</button>
+    <button class="pill-btn" id="btnCsv">📥 CSV Export</button>
+    <button class="pill-btn" id="btnDisc">🏆 Disziplin</button>`;
+  head.appendChild(row);
+  $('btnReport').addEventListener('click', showMonthlyReport);
+  $('btnCsv').addEventListener('click', exportCSV);
+  $('btnDisc').addEventListener('click', () => { $('sec-disc').classList.add('open'); $('sec-disc').scrollIntoView({behavior:'smooth'}); });
+}
+
+// ── HOOK INTO TRADE RE-RENDER ──
+const _origRenderTrades = renderTrades;
+renderTrades = function() {
+  _origRenderTrades();
+  injectPerfActions();
+  renderDiscipline();
+};
+
+// ── HOOK INTO LIVE PRICE FOR ALERTS ──
+const _origRenderTrade = renderTrade;
+renderTrade = function() {
+  _origRenderTrade();
+  checkAlerts(currentPrice);
+};
+
+renderTrades();
 
 </script>
 </body>
