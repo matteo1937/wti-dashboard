@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-04-22T20:14:33.109080",
+  "generated_at": "2026-04-22T23:09:03.714604",
   "date": "2026-04-22",
   "status": "ACTIVE",
   "direction": "long",
-  "current_price": 92.55,
-  "entry": 91.17,
+  "current_price": 92.52,
+  "entry": 91.14,
   "entry_zone": [
-    91.17,
-    91.86
+    91.14,
+    91.83
   ],
-  "stop": 86.0,
-  "target1": 98.07,
-  "target2": 101.52,
+  "stop": 85.97,
+  "target1": 98.04,
+  "target2": 101.49,
   "atr": 3.45,
   "risk_points": 5.17,
   "risk_usd": 517.0,
