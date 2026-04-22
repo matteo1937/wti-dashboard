@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-04-22T16:40:05.061694",
+  "generated_at": "2026-04-22T20:14:33.109080",
   "date": "2026-04-22",
   "status": "ACTIVE",
   "direction": "long",
-  "current_price": 93.3,
-  "entry": 91.92,
+  "current_price": 92.55,
+  "entry": 91.17,
   "entry_zone": [
-    91.92,
-    92.61
+    91.17,
+    91.86
   ],
-  "stop": 86.75,
-  "target1": 98.82,
-  "target2": 102.27,
+  "stop": 86.0,
+  "target1": 98.07,
+  "target2": 101.52,
   "atr": 3.45,
   "risk_points": 5.17,
   "risk_usd": 517.0,
@@ -22,11 +22,11 @@
   "confidence": 75,
   "confidence_label": "HOCH",
   "reasons": [
-    "X-Sentiment bullish (+0.35)",
+    "X-Sentiment bullish (+0.65)",
     "Preis \u00fcber Pivot ($87.2)",
-    "Preis \u00fcber VWAP ($88.45)",
+    "Preis \u00fcber VWAP ($90.5)",
     "\u00dcber 200 EMA ($92.1)"
   ],
-  "sentiment": 0.35,
+  "sentiment": 0.65,
   "bias": "bullish"
 }

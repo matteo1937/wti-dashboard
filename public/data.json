@@ -1,12 +1,12 @@
 {
-  "lastUpdated": "2026-04-22T17:05:00Z",
+  "lastUpdated": "2026-04-22T20:14:33.050569+00:00",
   "date": "2026-04-22",
-  "price": 92.99,
-  "change": 6.64,
-  "changePercent": 7.69,
+  "price": 92.55,
+  "change": -0.44,
+  "changePercent": -0.47,
   "atr": 3.45,
   "bias": "bullish",
-  "biasReason": "US-Iran Spannungen wiederentfacht – Strait of Hormuz weitgehend blockiert (~4-5 Mio. bpd Angebotsausfall). WTI bricht über absteigenden Trendlinienwiderstand nach oben aus. Preis über EMA200 ($92.10) und R1 ($91.50) – strukturell bullisch.",
+  "biasReason": "US-Iran Spannungen wiederentfacht \u2013 Strait of Hormuz weitgehend blockiert (~4-5 Mio. bpd Angebotsausfall). WTI bricht \u00fcber absteigenden Trendlinienwiderstand nach oben aus. Preis \u00fcber EMA200 ($92.10) und R1 ($91.50) \u2013 strukturell bullisch.",
   "keyLevels": {
     "settlement": 84.94,
     "pivot": 87.2,
@@ -21,14 +21,14 @@
     "premarket": {
       "status": "complete",
       "completedAt": "2026-04-20T18:40:00Z",
-      "summary": "WTI bounced +5.81% nach Strait of Hormuz Eskalation. Iran/USA Spannungen treiben Risk Premium. OPEC+ erhöht Output 206k bpd ab April — begrenzt Upside. Schlüsselzone $87-89, Resistance $92 (200 EMA).",
+      "summary": "WTI bounced +5.81% nach Strait of Hormuz Eskalation. Iran/USA Spannungen treiben Risk Premium. OPEC+ erh\u00f6ht Output 206k bpd ab April \u2014 begrenzt Upside. Schl\u00fcsselzone $87-89, Resistance $92 (200 EMA).",
       "checks": [
         {
           "label": "Overnight Range gecheckt",
           "done": true
         },
         {
-          "label": "Globex Volume geprüft",
+          "label": "Globex Volume gepr\u00fcft",
           "done": true
         },
         {
@@ -67,7 +67,7 @@
       "target1": 93.73,
       "target2": 95.3,
       "rr": "2.5",
-      "summary": "WTI brach heute nach Wiedereskalation der US-Iran Spannungen mit +7.7% aus der Opening Range nach oben aus – Strait-of-Hormuz-Blockade (~5% globales Angebot) treibt das Supply-Premium massiv. Der Breakout über den Opening-Range-High (~$90.50) bei hohem Volumen bestätigt das ORB-Long-Setup; Regime-Pivot und VWAP bei $90.50 dienen als Retest-Unterstützung für den Einstieg. Stop unter dem Opening-Range-Bereich bei $89.20, Target 1 am heutigen Intraday-High $93.73, Target 2 am R2-Level $95.30 (R:R 2.5).",
+      "summary": "WTI brach heute nach Wiedereskalation der US-Iran Spannungen mit +7.7% aus der Opening Range nach oben aus \u2013 Strait-of-Hormuz-Blockade (~5% globales Angebot) treibt das Supply-Premium massiv. Der Breakout \u00fcber den Opening-Range-High (~$90.50) bei hohem Volumen best\u00e4tigt das ORB-Long-Setup; Regime-Pivot und VWAP bei $90.50 dienen als Retest-Unterst\u00fctzung f\u00fcr den Einstieg. Stop unter dem Opening-Range-Bereich bei $89.20, Target 1 am heutigen Intraday-High $93.73, Target 2 am R2-Level $95.30 (R:R 2.5).",
       "checks": [
         {
           "label": "Erste 5-Min Kerze abgewartet",
@@ -78,7 +78,7 @@
           "done": true
         },
         {
-          "label": "Bias bestätigt",
+          "label": "Bias best\u00e4tigt",
           "done": true
         },
         {
@@ -86,7 +86,7 @@
           "done": true
         },
         {
-          "label": "Volume Bestätigung",
+          "label": "Volume Best\u00e4tigung",
           "done": true
         },
         {
@@ -99,7 +99,7 @@
       "status": "complete",
       "completedAt": "2026-04-22T17:05:00Z",
       "action": "Partial TP + Stop auf BE",
-      "summary": "WTI MCLM2026 bei $92.99 (+7.7% heute). ORB-Long-Entry $90.50 liegt $2.49 im Profit — T1 $93.73 nur noch $0.74 entfernt. Trump verlängerte US-Iran Waffenstillstand kurzfristig (bearishes Risiko), Hormuz bleibt aber blockiert und EIA-Daten sind neutral (461 Mio. Barrel, ~5-Jahres-Schnitt). Empfehlung: 50% Partial Take Profit bei aktuellem $93–$93.73 realisieren, Stop auf BE ($90.50) nachziehen, restliche Position auf T2 $95.30 halten.",
+      "summary": "WTI MCLM2026 bei $92.99 (+7.7% heute). ORB-Long-Entry $90.50 liegt $2.49 im Profit \u2014 T1 $93.73 nur noch $0.74 entfernt. Trump verl\u00e4ngerte US-Iran Waffenstillstand kurzfristig (bearishes Risiko), Hormuz bleibt aber blockiert und EIA-Daten sind neutral (461 Mio. Barrel, ~5-Jahres-Schnitt). Empfehlung: 50% Partial Take Profit bei aktuellem $93\u2013$93.73 realisieren, Stop auf BE ($90.50) nachziehen, restliche Position auf T2 $95.30 halten.",
       "checks": [
         {
           "label": "Position Review",
@@ -114,7 +114,7 @@
           "done": true
         },
         {
-          "label": "Setup noch gültig?",
+          "label": "Setup noch g\u00fcltig?",
           "done": true
         },
         {
@@ -165,7 +165,7 @@
           "done": false
         },
         {
-          "label": "Journal ausgefüllt",
+          "label": "Journal ausgef\u00fcllt",
           "done": false
         },
         {
@@ -173,7 +173,7 @@
           "done": false
         },
         {
-          "label": "Rollover geprüft",
+          "label": "Rollover gepr\u00fcft",
           "done": false
         }
       ]
@@ -181,31 +181,31 @@
   },
   "recentNews": [
     {
-      "headline": "WTI bricht über $92 — T1 $93.73 in Reichweite nach +7.7% Tagesgewinn",
+      "headline": "WTI bricht \u00fcber $92 \u2014 T1 $93.73 in Reichweite nach +7.7% Tagesgewinn",
       "time": "Heute 12:00 ET",
       "source": "TradingEconomics",
       "sentiment": "bullish"
     },
     {
-      "headline": "EIA: US-Rohöllager 461.6 Mio. Barrel — leicht über 5-Jahres-Schnitt, neutral für Markt",
+      "headline": "EIA: US-Roh\u00f6llager 461.6 Mio. Barrel \u2014 leicht \u00fcber 5-Jahres-Schnitt, neutral f\u00fcr Markt",
       "time": "Heute 10:30 ET",
       "source": "EIA",
       "sentiment": "neutral"
     },
     {
-      "headline": "Strait of Hormuz Shipping weitgehend blockiert – ~4-5 Mio. bpd Angebotsausfall (~5% globales Angebot)",
+      "headline": "Strait of Hormuz Shipping weitgehend blockiert \u2013 ~4-5 Mio. bpd Angebotsausfall (~5% globales Angebot)",
       "time": "Heute 06:00 ET",
       "source": "Bloomberg",
       "sentiment": "bullish"
     },
     {
-      "headline": "Trump verlängerte US-Iran Waffenstillstand kurzfristig – Tehran Führung 'seriously fractured'",
+      "headline": "Trump verl\u00e4ngerte US-Iran Waffenstillstand kurzfristig \u2013 Tehran F\u00fchrung 'seriously fractured'",
       "time": "Heute 11:00 ET",
       "source": "CNBC",
       "sentiment": "bearish"
     },
     {
-      "headline": "IEA April Report: Brent Peak Q2 2026 bei $115/b erwartet — OPEC+ Supply-Ausfall steigt auf 9.1 Mio. bpd",
+      "headline": "IEA April Report: Brent Peak Q2 2026 bei $115/b erwartet \u2014 OPEC+ Supply-Ausfall steigt auf 9.1 Mio. bpd",
       "time": "Heute 08:00 ET",
       "source": "IEA",
       "sentiment": "bullish"
