@@ -1,9 +1,9 @@
 {
-  "lastUpdated": "2026-05-15T18:14:22.720319+00:00",
+  "lastUpdated": "2026-05-15T21:41:52.072029+00:00",
   "date": "2026-05-15",
-  "price": 105.26,
-  "change": 0.03,
-  "changePercent": 0.03,
+  "price": 105.66,
+  "change": 0.4,
+  "changePercent": 0.38,
   "atr": 3.45,
   "bias": "bullish",
   "biasReason": "US-Iran Spannungen wiederentfacht \u2013 Strait of Hormuz weitgehend blockiert (~4-5 Mio. bpd Angebotsausfall). WTI bricht \u00fcber absteigenden Trendlinienwiderstand nach oben aus. Preis \u00fcber EMA200 ($92.10) und R1 ($91.50) \u2013 strukturell bullisch.",
@@ -213,6 +213,6 @@
   ],
   "sentiment": 0.65,
   "journal": [],
-  "dayHigh": 105.79,
+  "dayHigh": 105.99,
   "dayLow": 101.49
 }
