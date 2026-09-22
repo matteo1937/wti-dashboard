@@ -6,7 +6,8 @@ interface CameraCaptureProps {
 }
 
 export function CameraCapture({ disabled, onCapture }: CameraCaptureProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -19,21 +20,40 @@ export function CameraCapture({ disabled, onCapture }: CameraCaptureProps) {
   return (
     <div className="camera-capture">
       <input
-        ref={inputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleChange}
+        disabled={disabled}
+        hidden
+      />
+      <input
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
         onChange={handleChange}
         disabled={disabled}
         hidden
       />
-      <button
-        type="button"
-        className="capture-button"
-        disabled={disabled}
-        onClick={() => inputRef.current?.click()}
-      >
-        📷 Foto aufnehmen oder auswählen
-      </button>
+      <div className="capture-buttons">
+        <button
+          type="button"
+          className="capture-button"
+          disabled={disabled}
+          onClick={() => cameraInputRef.current?.click()}
+        >
+          📷 Foto aufnehmen
+        </button>
+        <button
+          type="button"
+          className="capture-button capture-button-secondary"
+          disabled={disabled}
+          onClick={() => galleryInputRef.current?.click()}
+        >
+          🖼️ Aus Galerie wählen
+        </button>
+      </div>
     </div>
   );
 }

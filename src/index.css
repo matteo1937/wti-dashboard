@@ -53,6 +53,12 @@ body {
   gap: 1rem;
 }
 
+.capture-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .capture-button {
   width: 100%;
   padding: 1rem;
@@ -63,6 +69,12 @@ body {
   background: var(--accent);
   color: #1c1917;
   cursor: pointer;
+}
+
+.capture-button-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--surface-alt);
 }
 
 .capture-button:disabled {
