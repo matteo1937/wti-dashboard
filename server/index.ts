@@ -1,9 +1,14 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { isSupportedMediaType, recognizeProductFromImage } from "./claude";
 import { findCatalogMatch, findProductByEan, saveProduct } from "./db";
 import type { ProductRecognition } from "./types";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const distDir = join(__dirname, "../dist");
 
 const app = express();
 app.use(cors());
@@ -89,6 +94,15 @@ app.post("/api/products", (req, res) => {
   });
   res.status(201).json({ result: stored.product, source: "datenbank", eanBarcode: stored.eanBarcode, grossist });
 });
+
+// In Produktion liefert derselbe Prozess auch das gebaute Frontend aus
+// (kein separater Vite-Dev-Server), damit ein einzelner Hosting-Service reicht.
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(distDir));
+  app.get("*", (_req, res) => {
+    res.sendFile(join(distDir, "index.html"));
+  });
+}
 
 const port = Number(process.env.PORT ?? 8787);
 app.listen(port, () => {
