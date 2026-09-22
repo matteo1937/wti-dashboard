@@ -47,7 +47,33 @@ db.exec(`
     updated_at TEXT NOT NULL,
     PRIMARY KEY (request_id, member_id)
   );
+
+  CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `);
+
+// Einmaliger, sicherer Reset-Mechanismus: wird nur ausgeführt, wenn
+// RESET_ALL_DATA_TOKEN gesetzt ist UND sich vom zuletzt angewendeten Token
+// unterscheidet. Danach wird der Token in der DB gespeichert, sodass ein
+// Neustart mit demselben Token keinen erneuten Reset auslöst (schützt vor
+// versehentlichem Datenverlust bei künftigen Deploys).
+function maybeResetAllData() {
+  const token = process.env.RESET_ALL_DATA_TOKEN;
+  if (!token) return;
+
+  const row = db.prepare("SELECT value FROM meta WHERE key = 'reset_token'").get() as
+    | { value: string }
+    | undefined;
+  if (row?.value === token) return;
+
+  db.exec("DELETE FROM votes; DELETE FROM requests; DELETE FROM members;");
+  db.prepare(
+    "INSERT INTO meta (key, value) VALUES ('reset_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+  ).run(token);
+}
+maybeResetAllData();
 
 function seedMembers() {
   const names = (process.env.MEMBER_NAMES ?? "Hans,Sepp,Vreni")
@@ -55,20 +81,31 @@ function seedMembers() {
     .map((n) => n.trim())
     .filter(Boolean);
 
-  const existing = db.prepare("SELECT name FROM members ORDER BY id").all() as { name: string }[];
-  const existingNames = existing.map((m) => m.name);
-  const namesMatch =
-    existingNames.length === names.length && existingNames.every((n, i) => n === names[i]);
+  const existing = db.prepare("SELECT id, name FROM members ORDER BY id").all() as {
+    id: number;
+    name: string;
+  }[];
 
-  if (existingNames.length > 0 && !namesMatch) {
+  if (existing.length === names.length) {
+    // Gleiche Anzahl Mitglieder: vermutlich wurde MEMBER_NAMES nur umbenannt
+    // (z.B. Platzhalter durch echte Namen ersetzt). Umbenennen statt neu
+    // anlegen, damit bereits verknüpfte Anfragen/Stimmen (per member_id)
+    // erhalten bleiben.
+    const rename = db.prepare("UPDATE members SET name = ? WHERE id = ?");
+    existing.forEach((member, i) => {
+      if (member.name !== names[i]) {
+        rename.run(names[i], member.id);
+      }
+    });
+    return;
+  }
+
+  if (existing.length > 0) {
     const { c: activityCount } = db
-      .prepare(
-        "SELECT (SELECT COUNT(*) FROM requests) + (SELECT COUNT(*) FROM votes) AS c"
-      )
+      .prepare("SELECT (SELECT COUNT(*) FROM requests) + (SELECT COUNT(*) FROM votes) AS c")
       .get() as { c: number };
-    // MEMBER_NAMES wurde geändert (z.B. Platzhalter durch echte Namen ersetzt).
-    // Solange noch keine echten Daten existieren, ersetzen wir die alten
-    // Seed-Mitglieder komplett statt sie stehen zu lassen.
+    // Unterschiedliche Anzahl Mitglieder und noch keine echten Daten:
+    // alte Seed-Mitglieder komplett ersetzen statt nur zu ergänzen.
     if (activityCount === 0) {
       db.exec("DELETE FROM members");
     }
