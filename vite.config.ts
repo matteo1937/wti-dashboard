@@ -11,11 +11,11 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       manifest: {
-        name: "Elektro Scanner",
-        short_name: "Elektro Scanner",
-        description: "Produkterkennung per Foto/Barcode für Elektroinstallateure",
-        theme_color: "#0f172a",
-        background_color: "#0f172a",
+        name: "Tal-Echo Auftritte",
+        short_name: "Tal-Echo",
+        description: "Auftrittsanfragen für das Ländlertrio Tal-Echo erfassen, abstimmen und im Kalender festhalten",
+        theme_color: "#4a3223",
+        background_color: "#f5ead9",
         display: "standalone",
         start_url: "/",
         icons: [
@@ -38,6 +38,10 @@ export default defineConfig({
     allowedHosts: [".trycloudflare.com"],
     proxy: {
       "/api": {
+        target: `http://localhost:${backendPort}`,
+        changeOrigin: true
+      },
+      "/uploads": {
         target: `http://localhost:${backendPort}`,
         changeOrigin: true
       }

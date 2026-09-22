@@ -1,63 +1,56 @@
-export type ProductCategory =
-  | "Steckdose"
-  | "Schalter"
-  | "Sicherungsautomat"
-  | "FI-Schutzschalter"
-  | "Kabel"
-  | "Verteiler"
-  | "Klemme"
-  | "Leuchte"
-  | "Sonstiges";
+export type RequestSource = "screenshot" | "phone" | "text";
+export type VoteValue = "yes" | "no" | "unsure";
+export type RequestStatus = "open" | "confirmed" | "declined";
 
-export interface EmpfohlenesErsatzprodukt {
-  hersteller: string;
-  produktlinie: string;
-  kompatibilitaetshinweis: string;
+export interface Member {
+  id: number;
+  name: string;
 }
 
-export interface ProductRecognition {
-  hersteller: string | null;
-  produktname: string | null;
-  typBezeichnung: string | null;
-  kategorie: ProductCategory;
-  verwendungszweck: string;
-  merkmale: string[];
-  konfidenz: "hoch" | "mittel" | "niedrig";
-  unsicher: boolean;
-  ersatzSuchkriterien: string;
-  ersatzprodukte: EmpfohlenesErsatzprodukt[];
+export interface VoteEntry {
+  memberId: number;
+  memberName: string;
+  vote: VoteValue | null;
+  updatedAt: string | null;
 }
 
-export type RecognitionSource = "foto_ki" | "datenbank";
-
-export interface StoredProduct {
-  id: string;
-  eanBarcode: string;
-  product: ProductRecognition;
+export interface BookingRequest {
+  id: number;
+  title: string;
+  client: string | null;
+  location: string | null;
+  eventDate: string | null;
+  eventTime: string | null;
+  notes: string | null;
+  source: RequestSource;
+  imagePath: string | null;
+  createdBy: number;
+  createdByName: string;
   createdAt: string;
+  updatedAt: string;
+  status: RequestStatus;
+  votes: VoteEntry[];
 }
 
-export type Grossist = "EM" | "Sonepar" | "Otto Fischer" | "Bugnard";
-
-export const GROSSISTEN: Grossist[] = ["EM", "Sonepar", "Otto Fischer", "Bugnard"];
-
-export interface GrossistMatch {
-  grossist: Grossist;
-  eldasNummer: string;
-  shopUrl: string | null;
-  verfuegbar: boolean;
-  preisChf: number | null;
-  matchQuality: "ean" | "fuzzy";
+export interface NewRequestInput {
+  title: string;
+  client?: string | null;
+  location?: string | null;
+  eventDate?: string | null;
+  eventTime?: string | null;
+  notes?: string | null;
+  source: RequestSource;
+  imagePath?: string | null;
+  createdBy: number;
 }
 
-export const PRODUCT_CATEGORIES: ProductCategory[] = [
-  "Steckdose",
-  "Schalter",
-  "Sicherungsautomat",
-  "FI-Schutzschalter",
-  "Kabel",
-  "Verteiler",
-  "Klemme",
-  "Leuchte",
-  "Sonstiges"
-];
+export interface UpdateRequestInput {
+  title?: string;
+  client?: string | null;
+  location?: string | null;
+  eventDate?: string | null;
+  eventTime?: string | null;
+  notes?: string | null;
+  source?: RequestSource;
+  imagePath?: string | null;
+}
