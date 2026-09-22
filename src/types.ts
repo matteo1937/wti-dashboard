@@ -9,18 +9,6 @@ export type ProductCategory =
   | "Leuchte"
   | "Sonstiges";
 
-export const PRODUCT_CATEGORIES: ProductCategory[] = [
-  "Steckdose",
-  "Schalter",
-  "Sicherungsautomat",
-  "FI-Schutzschalter",
-  "Kabel",
-  "Verteiler",
-  "Klemme",
-  "Leuchte",
-  "Sonstiges"
-];
-
 export interface ProductRecognition {
   hersteller: string | null;
   produktname: string | null;
@@ -51,31 +39,8 @@ export interface ScanResponse {
   source: RecognitionSource;
   eanBarcode?: string;
   grossist: GrossistMatch | null;
-  savedByUserName?: string;
-  manuellKorrigiert?: boolean;
 }
 
 export interface RecognizeErrorResponse {
   error: string;
-}
-
-export type UserRole = "admin" | "mitglied";
-
-export interface MeResponse {
-  userId: string;
-  userName: string;
-  orgId: string;
-  role: UserRole;
-}
-
-export interface ScanHistoryEntry {
-  id: string;
-  userId: string;
-  userName: string;
-  erkanntVia: "foto_ki" | "barcode_db";
-  eanBarcode: string | null;
-  produkt: ProductRecognition;
-  projektTag: string | null;
-  manuellKorrigiert: boolean;
-  createdAt: string;
 }
