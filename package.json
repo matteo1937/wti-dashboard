@@ -1,9 +1,9 @@
 {
-  "name": "elektro-scanner",
+  "name": "tal-echo-auftritte",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Produkterkennung per Foto/Barcode für Elektroinstallateure (MVP 1: Foto -> Claude Vision -> Anzeige)",
+  "description": "Verwaltung von Auftrittsanfragen für das Ländlertrio Tal-Echo: erfassen, gemeinsam abstimmen, bei Einigkeit automatisch in den Kalender übernehmen.",
   "scripts": {
     "dev": "concurrently -n web,api -c blue,green \"npm:dev:web\" \"npm:dev:server\"",
     "dev:web": "vite",
@@ -12,25 +12,29 @@
     "preview": "vite preview",
     "start": "NODE_ENV=production tsx server/index.ts",
     "start:server": "tsx server/index.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
-    "import:catalog": "tsx server/scripts/import-catalog.ts"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit"
   },
   "engines": {
     "node": ">=22.5.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "csv-parse": "^5.6.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "html5-qrcode": "^2.3.8",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.4.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/multer": "^1.4.12",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

@@ -1,86 +1,89 @@
-# Elektro Scanner
+# Tal-Echo — Auftrittsanfragen
 
-Produkterkennung per Foto/Barcode für Elektroinstallateure auf der Baustelle.
-Erkennt Hersteller, Produkttyp und Verwendungszweck von Elektromaterial
-(Steckdosen, Schalter, Sicherungsautomaten, Kabel, Verteiler, …) per Foto,
-später auch per Barcode/QR-Scan.
+Web-App zur Verwaltung von Auftrittsanfragen für das Ländlertrio **Tal-Echo**
+(3 feste Mitglieder). Anfragen werden zentral erfasst, von allen drei
+Mitgliedern abgestimmt und bei einstimmigem Ja automatisch in den
+gemeinsamen Kalender übernommen.
 
-## Status: MVP 3
+## Funktionen
 
-**+ Grossisten-Logik (EM Standard, Sonepar-Fallback) und Eldas-Nummern.**
-Zu jedem erkannten Produkt (per Barcode oder Foto) wird zusätzlich im
-lokalen Produktkatalog nachgeschaut: Elektro-Material AG (EM) ist immer der
-bevorzugte Grossist; ist das Produkt bei EM nicht verfügbar, wird
-automatisch der Sonepar-Eintrag angezeigt. Die Produktkarte zeigt klar per
-Badge, welcher Grossist gerade angezeigt wird, plus Eldas-Nummer, Preis,
-Verfügbarkeit und Link.
+- **Anfrage erfassen** — Datum/Uhrzeit, Ort/Veranstaltung, Auftraggeber,
+  Notizen (Honorar, Dauer, Wünsche) und Quelle (E-Mail-Screenshot,
+  Telefonanruf, Direkteingabe).
+- **Automatische Datumserkennung aus Screenshots** — Beim Hochladen eines
+  Fotos/Screenshots einer E-Mail extrahiert die App per OCR (Tesseract.js,
+  läuft im Browser) automatisch Datum, Uhrzeit, Ort und Absender als
+  Vorschlag. Die Felder bleiben vor dem Speichern bearbeitbar.
+- **Abstimmung** — Jedes der 3 Mitglieder stimmt mit 👍 Ja / 🤷 Unsicher /
+  👎 Nein ab. Sobald alle drei mit Ja gestimmt haben, wechselt die Anfrage
+  automatisch von „In Abstimmung" zu „Bestätigt" und erscheint im Kalender.
+- **Kalenderansicht** — Monatsansicht und Listenansicht aller bestätigten
+  Termine, getrennt von der Liste offener/in Abstimmung befindlicher
+  Anfragen.
+- **Hinweise** — Ein Badge in der Navigation zeigt jedem Mitglied direkt an,
+  bei wie vielen offenen Anfragen die eigene Stimme noch fehlt.
 
-⚠️ **Wichtig:** Es liegen noch **keine echten EM/Sonepar/Eldas-Daten** vor
-(siehe „Katalog befüllen" unten). Der Katalog ist standardmässig leer, bis
-du echte Daten importierst – bis dahin zeigt die App ehrlich „Kein
-Katalogtreffer" an, statt etwas zu erfinden. Eine Formatvorlage mit klar
-fiktiven Beispieldaten liegt in [`db/catalog-example.csv`](./db/catalog-example.csv).
-
-## Etappenplan
-
-| MVP | Umfang |
-| --- | --- |
-| **MVP 1** ✅ | Foto → Claude Vision → Anzeige (Hersteller, Typ, Verwendung). Keine DB, kein Team. |
-| **MVP 2** ✅ | + Barcode/QR-Scan (html5-qrcode), lokale Produkt-DB (SQLite), EAN-Abgleich mit Fallback auf Foto-KI, Speichern für künftige Scans. |
-| **MVP 3** ✅ | + Grossisten-Logik: EM als Standard, automatischer Sonepar-Fallback falls bei EM nicht verfügbar, Eldas-Nummern + Katalog-CSV-Import, Produktkarte zeigt Grossist-Badge/Preis/Verfügbarkeit/Link. |
-| **MVP 4** | + Team-Funktion (Organisationen, Rollen Admin/Mitglied via Clerk), geteilte Scan-Historie, Migration SQLite → Postgres für Mehrbenutzer, Priorisierung bereits erfasster/korrigierter Produkte, automatische Ersatzprodukt-Vorschläge (alternatives-Tabelle), CSV/PDF-Export von Scan-Listen. |
-
-Das Referenz-Datenmodell für MVP 4 (Postgres, Team-fähig) liegt bereits
-(noch ungenutzt) in [`db/schema.sql`](./db/schema.sql). Die aktuelle
-Datenbank (`data/products.db`, SQLite) ist bewusst einfacher gehalten, da
-Team-Mehrbenutzer erst in MVP 4 gebraucht wird.
-
-## Architektur (MVP 3)
+## Architektur
 
 ```
-src/                       React + Vite Frontend (PWA)
-  components/
-    CameraCapture.tsx      Foto-Aufnahme (Datei-Input mit Kamera-Capture)
-    BarcodeScanner.tsx     Live-Kamera-Scan für Barcode/QR (html5-qrcode)
-    ProductCard.tsx        Ergebnis-Anzeige inkl. Quelle, Grossist-Badge, Eldas-Nr.
-  lib/api.ts                Ruft Backend-API auf
-server/                    Node/Express Backend
-  claude.ts                Anthropic Claude Vision Aufruf (strukturiertes JSON via Tool-Use)
-  db.ts                    SQLite: Scan-Cache (products) + Katalog (catalog_products,
-                            supplier_listings) inkl. findCatalogMatch() mit EM/Sonepar-Logik
-  scripts/import-catalog.ts CSV-Import fürs Befüllen des Katalogs
-  index.ts                 Express-Server: /api/recognize, /api/products/by-ean/:ean, /api/products
-db/schema.sql               Referenz-Datenmodell für MVP 4 (Postgres, noch nicht aktiv)
-db/catalog-example.csv      CSV-Formatvorlage mit fiktiven Beispieldaten (kein Import per Default)
+src/                       React + Vite Frontend (PWA, mobile-first)
+  context/
+    AuthContext.tsx         Login-Status (3 feste Mitglieder)
+    RequestsContext.tsx      Zentraler Anfragen-Cache für Badges/Listen
+  lib/
+    api.ts                   Fetch-Wrapper fürs Backend
+    ocr.ts                   Tesseract.js-Aufruf + Heuristiken (Datum/Zeit/
+                              Ort/Absender aus E-Mail-Text erkennen)
+  pages/
+    Login.tsx                Profil wählen + gemeinsamer Zugangscode
+    OpenRequests.tsx          Offene Anfragen, getrennt nach "wartet auf
+                              dich" / "wartet auf die anderen"
+    NewRequest.tsx            Anfrage erfassen inkl. Foto-Upload + OCR
+    RequestDetail.tsx         Details, Abstimmung, Bearbeiten, Absagen
+    Calendar.tsx               Monats-/Listenansicht bestätigter Termine
+  components/                Navbar, VoteButtons, RequestCard, StatusBadge, …
+server/                     Node/Express Backend
+  db.ts                      SQLite (node:sqlite) — members, requests, votes
+  auth.ts                    Login per Name + gemeinsamem Zugangscode,
+                              Sitzung als signiertes JWT-Cookie
+  index.ts                   Express-Routen (Auth, Requests, Votes, Uploads)
 ```
 
-Der Claude API-Key liegt **nur auf dem Backend** (server/.env), niemals im
-Browser-Code – sonst könnte ihn jeder aus dem Frontend auslesen.
+Die SQLite-Datenbank (`data/trio.db`) und hochgeladene Screenshots
+(`data/uploads/`) werden dauerhaft auf dem Server gespeichert (nicht nur im
+Browser) — Grundlage für Mehrbenutzer-Betrieb der 3 Accounts.
+
+### Warum kein externer OCR-Dienst?
+
+Die Texterkennung läuft komplett im Browser via
+[Tesseract.js](https://github.com/naptha/tesseract.js) — kein API-Key, keine
+Kosten pro Bild. Die deutsche Spracherkennung wird beim ersten Einsatz
+einmalig nachgeladen (Internetverbindung nötig) und danach vom Browser
+zwischengespeichert. Die Erkennung ist heuristisch (Regex für Datum, Uhrzeit,
+PLZ+Ort, „Von:"/„Betreff:"-Zeilen) und dient bewusst nur als **Vorschlag** —
+alle Felder bleiben vor dem Speichern editierbar.
 
 ## Setup
 
 ### 1. Voraussetzungen
 
-- Node.js ≥ 20
-- Ein Anthropic API-Key (siehe unten)
+- Node.js ≥ 22.5 (nutzt das eingebaute `node:sqlite`, kein separates
+  Datenbank-Programm nötig)
 
-### 2. Anthropic API Key erstellen
-
-1. Gehe auf [console.anthropic.com](https://console.anthropic.com) und logge dich ein / erstelle einen Account.
-2. Links im Menü auf **API Keys** klicken.
-3. **Create Key** klicken, einen Namen vergeben (z.B. "elektro-scanner-dev").
-4. Den angezeigten Key (`sk-ant-...`) sofort kopieren – er wird nur einmal angezeigt.
-5. Unter **Billing** ein kleines Guthaben hinterlegen (Vision-Aufrufe sind pro Bild sehr günstig, im Cent-Bereich).
-
-### 3. Projekt einrichten
+### 2. Projekt einrichten
 
 ```bash
 npm install
 cp .env.example .env
-# .env öffnen und ANTHROPIC_API_KEY=sk-ant-... eintragen
 ```
 
-### 4. Lokal starten
+In `.env` anpassen:
+
+- `MEMBER_NAMES` — die 3 Vornamen der Trio-Mitglieder (kommagetrennt)
+- `APP_PASSCODE` — gemeinsamer Zugangscode für die App (unbedingt ändern!)
+- `JWT_SECRET` — zufällige, lange Zeichenfolge zum Signieren der Sitzung
+
+### 3. Lokal starten
 
 ```bash
 npm run dev
@@ -90,44 +93,41 @@ Startet gleichzeitig:
 - Vite-Dev-Server (Frontend) auf `http://localhost:5173`
 - Express-Backend auf `http://localhost:8787`
 
-Das Frontend proxied `/api/*`-Aufrufe automatisch zum Backend.
-
 Auf dem Handy: gleiches WLAN, `http://<rechner-ip>:5173` öffnen, "Zum
-Homescreen hinzufügen" für die installierbare PWA. Kameraaufnahme nutzt den
-Datei-Input mit `capture="environment"` (Rückkamera) – funktioniert ohne
-zusätzliche Berechtigungsdialoge zuverlässig auf iOS und Android.
+Homescreen hinzufügen" für die installierbare PWA.
 
-### 5. Katalog befüllen (Eldas-Nummern + Grossisten)
-
-Es gibt keine offene EM/Sonepar-API – der Katalog wird per CSV importiert.
-Spalten (eine Zeile = ein Grossisten-Eintrag für ein Produkt):
-
-```
-hersteller,bezeichnung,typ,kategorie,eldas_nummer,ean_barcode,beschreibung,grossist,prioritaet,shop_url,verfuegbar,preis_chf
-```
-
-- `eldas_nummer` ist Pflicht und identifiziert das Produkt eindeutig (auch über mehrere Grossisten-Zeilen hinweg).
-- `grossist` muss `EM`, `Sonepar`, `Otto Fischer` oder `Bugnard` sein.
-- `prioritaet` optional – ohne Angabe wird automatisch EM=10, Sonepar=20, Otto Fischer=30, Bugnard=40 gesetzt (niedriger = bevorzugt). Die EM-vor-Sonepar-Logik ergibt sich automatisch daraus.
-- Erneuter Import derselben `eldas_nummer`+`grossist`-Kombination aktualisiert den bestehenden Eintrag (z.B. für Preis-/Verfügbarkeits-Updates).
+### 4. Produktion
 
 ```bash
-npm run import:catalog -- pfad/zu/deiner-datei.csv
+npm run build
+npm start
 ```
 
-Formatvorlage mit **rein fiktiven** Beispieldaten: [`db/catalog-example.csv`](./db/catalog-example.csv)
-(zeigt auch den EM-nicht-verfügbar → Sonepar-Fallback-Fall).
+Der Node-Prozess liefert dann sowohl die API als auch das gebaute Frontend
+über denselben Port aus (siehe `PORT` in `.env`) — ein einzelner
+Hosting-Service reicht.
 
-### 6. Build
+### 5. Build/Typecheck prüfen
 
 ```bash
-npm run build     # Frontend-Build nach dist/
-npm run typecheck # Typprüfung Frontend + Backend
+npm run typecheck
+npm run build
 ```
 
-## Nächste Schritte
+## Bekannte Einschränkungen / nächste Schritte
 
-MVP 4: Team-Funktion (Organisationen, Rollen, geteilte Scan-Historie),
-Migration der lokalen SQLite-DB auf Postgres für echten Mehrbenutzer-Betrieb,
-automatische Ersatzprodukt-Vorschläge über die `alternatives`-Tabelle im
-Referenz-Datenmodell, CSV/PDF-Export von Scan-Listen.
+- **Login** ist bewusst simpel gehalten (Name wählen + ein gemeinsamer
+  Zugangscode) statt individueller Passwörter — passend für 3 vertraute
+  Mitglieder ohne öffentlichen Zugriff. Für mehr Sicherheit könnte jedes
+  Mitglied stattdessen ein eigenes Passwort erhalten.
+  Diese Umgebung nutzt zudem Node's `node:sqlite` (Stand: experimentell,
+  Warnung beim Start ist normal) statt eines externen DB-Servers, damit
+  keine zusätzliche Infrastruktur nötig ist.
+- **Push/E-Mail-Benachrichtigungen** sind nicht implementiert (nur
+  In-App-Badge wie gefordert); könnten über einen Web-Push-Dienst oder
+  einen E-Mail-Versand (z.B. Resend/SMTP) ergänzt werden.
+- Zwei Dev-Abhängigkeiten (`vite`, `react-router-dom`) haben laut
+  `npm audit` bekannte, aber für dieses interne 3-Personen-Setup
+  risikoarme Advisories (Dev-Server-Exposition bzw. SSR-spezifisch, hier
+  nicht genutzt). Ein Upgrade auf die jeweils nächste Major-Version ist
+  möglich, aber nicht Teil dieses Umbaus.

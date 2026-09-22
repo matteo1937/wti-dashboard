@@ -2,6 +2,7 @@ node_modules/
 dist/
 dev-dist/
 data/
+uploads/
 .DS_Store
 .env
 .env.local

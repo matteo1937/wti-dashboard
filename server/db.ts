@@ -1,213 +1,252 @@
 import { DatabaseSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import type { Grossist, GrossistMatch, ProductRecognition, StoredProduct } from "./types";
+import type {
+  BookingRequest,
+  Member,
+  NewRequestInput,
+  RequestStatus,
+  UpdateRequestInput,
+  VoteEntry,
+  VoteValue
+} from "./types";
 
-const DB_PATH = process.env.SQLITE_PATH ?? "data/products.db";
+const DB_PATH = process.env.SQLITE_PATH ?? "data/trio.db";
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
 export const db = new DatabaseSync(DB_PATH);
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
-    ean_barcode TEXT UNIQUE NOT NULL,
-    product_json TEXT NOT NULL,
-    created_at TEXT NOT NULL
+  PRAGMA foreign_keys = ON;
+
+  CREATE TABLE IF NOT EXISTS members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
   );
 
-  CREATE TABLE IF NOT EXISTS catalog_products (
-    id TEXT PRIMARY KEY,
-    hersteller TEXT,
-    bezeichnung TEXT,
-    typ TEXT,
-    kategorie TEXT,
-    eldas_nummer TEXT UNIQUE NOT NULL,
-    ean_barcode TEXT,
-    beschreibung TEXT,
-    updated_at TEXT NOT NULL
+  CREATE TABLE IF NOT EXISTS requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    client TEXT,
+    location TEXT,
+    event_date TEXT,
+    event_time TEXT,
+    notes TEXT,
+    source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text')),
+    image_path TEXT,
+    created_by INTEGER NOT NULL REFERENCES members(id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','confirmed','declined'))
   );
-  CREATE INDEX IF NOT EXISTS idx_catalog_ean ON catalog_products(ean_barcode);
-  CREATE INDEX IF NOT EXISTS idx_catalog_hersteller_typ ON catalog_products(hersteller, typ);
 
-  CREATE TABLE IF NOT EXISTS supplier_listings (
-    id TEXT PRIMARY KEY,
-    product_id TEXT NOT NULL REFERENCES catalog_products(id) ON DELETE CASCADE,
-    grossist TEXT NOT NULL,
-    prioritaet INTEGER NOT NULL,
-    shop_url TEXT,
-    verfuegbar INTEGER NOT NULL,
-    preis_chf REAL,
-    checked_at TEXT NOT NULL,
-    UNIQUE(product_id, grossist)
+  CREATE TABLE IF NOT EXISTS votes (
+    request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    member_id INTEGER NOT NULL REFERENCES members(id),
+    vote TEXT NOT NULL CHECK(vote IN ('yes','no','unsure')),
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (request_id, member_id)
   );
-  CREATE INDEX IF NOT EXISTS idx_listings_product ON supplier_listings(product_id, prioritaet);
 `);
 
-function rowToStoredProduct(row: {
-  id: string;
-  ean_barcode: string;
-  product_json: string;
+function seedMembers() {
+  const names = (process.env.MEMBER_NAMES ?? "Hans,Sepp,Vreni")
+    .split(",")
+    .map((n) => n.trim())
+    .filter(Boolean);
+
+  const insert = db.prepare("INSERT OR IGNORE INTO members (name) VALUES (?)");
+  for (const name of names) {
+    insert.run(name);
+  }
+}
+seedMembers();
+
+export function getMembers(): Member[] {
+  const rows = db.prepare("SELECT id, name FROM members ORDER BY id").all() as {
+    id: number;
+    name: string;
+  }[];
+  return rows;
+}
+
+export function getMemberById(id: number): Member | undefined {
+  const row = db.prepare("SELECT id, name FROM members WHERE id = ?").get(id) as
+    | { id: number; name: string }
+    | undefined;
+  return row;
+}
+
+export function getMemberByName(name: string): Member | undefined {
+  const row = db.prepare("SELECT id, name FROM members WHERE name = ?").get(name) as
+    | { id: number; name: string }
+    | undefined;
+  return row;
+}
+
+interface RequestRow {
+  id: number;
+  title: string;
+  client: string | null;
+  location: string | null;
+  event_date: string | null;
+  event_time: string | null;
+  notes: string | null;
+  source: BookingRequest["source"];
+  image_path: string | null;
+  created_by: number;
+  created_by_name: string;
   created_at: string;
-}): StoredProduct {
+  updated_at: string;
+  status: RequestStatus;
+}
+
+function getVotesForRequest(requestId: number): VoteEntry[] {
+  const members = getMembers();
+  const rows = db
+    .prepare("SELECT member_id, vote, updated_at FROM votes WHERE request_id = ?")
+    .all(requestId) as { member_id: number; vote: VoteValue; updated_at: string }[];
+  const byMember = new Map(rows.map((r) => [r.member_id, r]));
+
+  return members.map((m) => {
+    const v = byMember.get(m.id);
+    return {
+      memberId: m.id,
+      memberName: m.name,
+      vote: v?.vote ?? null,
+      updatedAt: v?.updated_at ?? null
+    };
+  });
+}
+
+function rowToRequest(row: RequestRow): BookingRequest {
   return {
     id: row.id,
-    eanBarcode: row.ean_barcode,
-    product: JSON.parse(row.product_json) as ProductRecognition,
-    createdAt: row.created_at
+    title: row.title,
+    client: row.client,
+    location: row.location,
+    eventDate: row.event_date,
+    eventTime: row.event_time,
+    notes: row.notes,
+    source: row.source,
+    imagePath: row.image_path,
+    createdBy: row.created_by,
+    createdByName: row.created_by_name,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    status: row.status,
+    votes: getVotesForRequest(row.id)
   };
 }
 
-export function findProductByEan(ean: string): StoredProduct | null {
-  const stmt = db.prepare("SELECT * FROM products WHERE ean_barcode = ?");
-  const row = stmt.get(ean) as
-    | { id: string; ean_barcode: string; product_json: string; created_at: string }
-    | undefined;
-  return row ? rowToStoredProduct(row) : null;
+const REQUEST_SELECT = `
+  SELECT r.id, r.title, r.client, r.location, r.event_date, r.event_time, r.notes,
+         r.source, r.image_path, r.created_by, m.name AS created_by_name,
+         r.created_at, r.updated_at, r.status
+  FROM requests r
+  JOIN members m ON m.id = r.created_by
+`;
+
+export function listRequests(status?: RequestStatus): BookingRequest[] {
+  const rows = status
+    ? (db
+        .prepare(`${REQUEST_SELECT} WHERE r.status = ? ORDER BY r.event_date IS NULL, r.event_date ASC, r.created_at ASC`)
+        .all(status) as unknown as RequestRow[])
+    : (db.prepare(`${REQUEST_SELECT} ORDER BY r.created_at DESC`).all() as unknown as RequestRow[]);
+  return rows.map(rowToRequest);
 }
 
-export function saveProduct(ean: string, product: ProductRecognition): StoredProduct {
-  const existing = findProductByEan(ean);
-  const id = existing?.id ?? randomUUID();
-  const createdAt = existing?.createdAt ?? new Date().toISOString();
-
-  const stmt = db.prepare(`
-    INSERT INTO products (id, ean_barcode, product_json, created_at)
-    VALUES (?, ?, ?, ?)
-    ON CONFLICT(ean_barcode) DO UPDATE SET product_json = excluded.product_json
-  `);
-  stmt.run(id, ean, JSON.stringify(product), createdAt);
-
-  return { id, eanBarcode: ean, product, createdAt };
+export function getRequestById(id: number): BookingRequest | undefined {
+  const row = db.prepare(`${REQUEST_SELECT} WHERE r.id = ?`).get(id) as RequestRow | undefined;
+  return row ? rowToRequest(row) : undefined;
 }
 
-export interface CatalogImportRow {
-  hersteller: string | null;
-  bezeichnung: string | null;
-  typ: string | null;
-  kategorie: string | null;
-  eldasNummer: string;
-  eanBarcode: string | null;
-  beschreibung: string | null;
-  grossist: Grossist;
-  prioritaet: number;
-  shopUrl: string | null;
-  verfuegbar: boolean;
-  preisChf: number | null;
-}
-
-export function upsertCatalogRow(row: CatalogImportRow): void {
+export function createRequest(input: NewRequestInput): BookingRequest {
   const now = new Date().toISOString();
+  const result = db
+    .prepare(
+      `INSERT INTO requests
+        (title, client, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`
+    )
+    .run(
+      input.title,
+      input.client ?? null,
+      input.location ?? null,
+      input.eventDate ?? null,
+      input.eventTime ?? null,
+      input.notes ?? null,
+      input.source,
+      input.imagePath ?? null,
+      input.createdBy,
+      now,
+      now
+    );
+  const id = Number(result.lastInsertRowid);
+  return getRequestById(id)!;
+}
 
-  const existing = db
-    .prepare("SELECT id FROM catalog_products WHERE eldas_nummer = ?")
-    .get(row.eldasNummer) as { id: string } | undefined;
-  const productId = existing?.id ?? randomUUID();
+export function updateRequest(id: number, input: UpdateRequestInput): BookingRequest | undefined {
+  const existing = getRequestById(id);
+  if (!existing) return undefined;
 
+  const now = new Date().toISOString();
   db.prepare(
-    `
-    INSERT INTO catalog_products
-      (id, hersteller, bezeichnung, typ, kategorie, eldas_nummer, ean_barcode, beschreibung, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(eldas_nummer) DO UPDATE SET
-      hersteller = excluded.hersteller,
-      bezeichnung = excluded.bezeichnung,
-      typ = excluded.typ,
-      kategorie = excluded.kategorie,
-      ean_barcode = excluded.ean_barcode,
-      beschreibung = excluded.beschreibung,
-      updated_at = excluded.updated_at
-  `
+    `UPDATE requests SET
+       title = ?, client = ?, location = ?, event_date = ?, event_time = ?,
+       notes = ?, source = ?, image_path = ?, updated_at = ?
+     WHERE id = ?`
   ).run(
-    productId,
-    row.hersteller,
-    row.bezeichnung,
-    row.typ,
-    row.kategorie,
-    row.eldasNummer,
-    row.eanBarcode,
-    row.beschreibung,
-    now
+    input.title ?? existing.title,
+    input.client !== undefined ? input.client : existing.client,
+    input.location !== undefined ? input.location : existing.location,
+    input.eventDate !== undefined ? input.eventDate : existing.eventDate,
+    input.eventTime !== undefined ? input.eventTime : existing.eventTime,
+    input.notes !== undefined ? input.notes : existing.notes,
+    input.source ?? existing.source,
+    input.imagePath !== undefined ? input.imagePath : existing.imagePath,
+    now,
+    id
   );
+  return getRequestById(id);
+}
 
+function recomputeStatus(id: number) {
+  const request = getRequestById(id);
+  if (!request || request.status === "declined") return;
+
+  const allYes = request.votes.length > 0 && request.votes.every((v) => v.vote === "yes");
+  const newStatus: RequestStatus = allYes ? "confirmed" : "open";
+  if (newStatus !== request.status) {
+    db.prepare("UPDATE requests SET status = ?, updated_at = ? WHERE id = ?").run(
+      newStatus,
+      new Date().toISOString(),
+      id
+    );
+  }
+}
+
+export function setVote(requestId: number, memberId: number, vote: VoteValue): BookingRequest | undefined {
+  const now = new Date().toISOString();
   db.prepare(
-    `
-    INSERT INTO supplier_listings
-      (id, product_id, grossist, prioritaet, shop_url, verfuegbar, preis_chf, checked_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(product_id, grossist) DO UPDATE SET
-      prioritaet = excluded.prioritaet,
-      shop_url = excluded.shop_url,
-      verfuegbar = excluded.verfuegbar,
-      preis_chf = excluded.preis_chf,
-      checked_at = excluded.checked_at
-  `
-  ).run(
-    randomUUID(),
-    productId,
-    row.grossist,
-    row.prioritaet,
-    row.shopUrl,
-    row.verfuegbar ? 1 : 0,
-    row.preisChf,
-    now
+    `INSERT INTO votes (request_id, member_id, vote, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(request_id, member_id) DO UPDATE SET vote = excluded.vote, updated_at = excluded.updated_at`
+  ).run(requestId, memberId, vote, now);
+
+  recomputeStatus(requestId);
+  return getRequestById(requestId);
+}
+
+export function setRequestStatus(id: number, status: RequestStatus): BookingRequest | undefined {
+  db.prepare("UPDATE requests SET status = ?, updated_at = ? WHERE id = ?").run(
+    status,
+    new Date().toISOString(),
+    id
   );
+  return getRequestById(id);
 }
 
-interface CatalogProductRow {
-  id: string;
-  eldas_nummer: string;
-}
-
-interface SupplierListingRow {
-  grossist: string;
-  shop_url: string | null;
-  verfuegbar: number;
-  preis_chf: number | null;
-}
-
-function pickBestListing(productId: string): SupplierListingRow | null {
-  const listings = db
-    .prepare("SELECT * FROM supplier_listings WHERE product_id = ? ORDER BY prioritaet ASC")
-    .all(productId) as unknown as SupplierListingRow[];
-  return listings.find((listing) => listing.verfuegbar) ?? listings[0] ?? null;
-}
-
-function toMatch(product: CatalogProductRow, matchQuality: "ean" | "fuzzy"): GrossistMatch | null {
-  const listing = pickBestListing(product.id);
-  if (!listing) return null;
-
-  return {
-    grossist: listing.grossist as Grossist,
-    eldasNummer: product.eldas_nummer,
-    shopUrl: listing.shop_url,
-    verfuegbar: Boolean(listing.verfuegbar),
-    preisChf: listing.preis_chf,
-    matchQuality
-  };
-}
-
-export function findCatalogMatch(params: {
-  eanBarcode?: string | null;
-  hersteller?: string | null;
-  typBezeichnung?: string | null;
-}): GrossistMatch | null {
-  if (params.eanBarcode) {
-    const row = db
-      .prepare("SELECT id, eldas_nummer FROM catalog_products WHERE ean_barcode = ?")
-      .get(params.eanBarcode) as CatalogProductRow | undefined;
-    if (row) return toMatch(row, "ean");
-  }
-
-  if (params.hersteller && params.typBezeichnung) {
-    const row = db
-      .prepare(
-        "SELECT id, eldas_nummer FROM catalog_products WHERE lower(hersteller) = lower(?) AND lower(typ) LIKE lower(?)"
-      )
-      .get(params.hersteller, `%${params.typBezeichnung}%`) as CatalogProductRow | undefined;
-    if (row) return toMatch(row, "fuzzy");
-  }
-
-  return null;
+export function deleteRequest(id: number): void {
+  db.prepare("DELETE FROM requests WHERE id = ?").run(id);
 }
