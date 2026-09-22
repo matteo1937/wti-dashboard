@@ -1,4 +1,4 @@
-import type { ProductRecognition, RecognizeErrorResponse, RecognizeResponse } from "../types";
+import type { ProductRecognition, RecognizeErrorResponse, ScanResponse } from "../types";
 
 function fileToBase64(file: File): Promise<{ data: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
@@ -14,7 +14,12 @@ function fileToBase64(file: File): Promise<{ data: string; mediaType: string }> 
   });
 }
 
-export async function recognizeProduct(file: File): Promise<ProductRecognition> {
+async function parseErrorResponse(response: Response): Promise<string> {
+  const body = (await response.json().catch(() => null)) as RecognizeErrorResponse | null;
+  return body?.error ?? `Anfrage fehlgeschlagen (Status ${response.status})`;
+}
+
+export async function recognizeProduct(file: File): Promise<ScanResponse> {
   const { data, mediaType } = await fileToBase64(file);
 
   const response = await fetch("/api/recognize", {
@@ -24,10 +29,38 @@ export async function recognizeProduct(file: File): Promise<ProductRecognition> 
   });
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as RecognizeErrorResponse | null;
-    throw new Error(body?.error ?? `Erkennung fehlgeschlagen (Status ${response.status})`);
+    throw new Error(await parseErrorResponse(response));
   }
 
-  const body = (await response.json()) as RecognizeResponse;
-  return body.result;
+  return (await response.json()) as ScanResponse;
+}
+
+export async function lookupProductByBarcode(ean: string): Promise<ScanResponse | null> {
+  const response = await fetch(`/api/products/by-ean/${encodeURIComponent(ean)}`);
+
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return (await response.json()) as ScanResponse;
+}
+
+export async function saveProductForBarcode(
+  ean: string,
+  product: ProductRecognition
+): Promise<ScanResponse> {
+  const response = await fetch("/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eanBarcode: ean, product })
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return (await response.json()) as ScanResponse;
 }

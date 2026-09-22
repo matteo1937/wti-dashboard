@@ -1,4 +1,4 @@
-import type { ProductRecognition } from "../types";
+import type { ProductRecognition, RecognitionSource } from "../types";
 
 const KONFIDENZ_LABEL: Record<ProductRecognition["konfidenz"], string> = {
   hoch: "Hohe Zuverlässigkeit",
@@ -6,11 +6,24 @@ const KONFIDENZ_LABEL: Record<ProductRecognition["konfidenz"], string> = {
   niedrig: "Niedrige Zuverlässigkeit"
 };
 
-export function ProductCard({ result }: { result: ProductRecognition }) {
+const SOURCE_LABEL: Record<RecognitionSource, string> = {
+  datenbank: "🗄️ Bereits erfasst (lokale Datenbank)",
+  foto_ki: "🤖 KI-Foto-Erkennung"
+};
+
+interface ProductCardProps {
+  result: ProductRecognition;
+  source: RecognitionSource;
+}
+
+export function ProductCard({ result, source }: ProductCardProps) {
   return (
     <div className="product-card">
-      <div className={`confidence-badge confidence-${result.konfidenz}`}>
-        {KONFIDENZ_LABEL[result.konfidenz]}
+      <div className="badge-row">
+        <div className={`confidence-badge confidence-${result.konfidenz}`}>
+          {KONFIDENZ_LABEL[result.konfidenz]}
+        </div>
+        <div className="source-badge">{SOURCE_LABEL[source]}</div>
       </div>
 
       {result.unsicher && (

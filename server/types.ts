@@ -21,6 +21,15 @@ export interface ProductRecognition {
   ersatzSuchkriterien: string;
 }
 
+export type RecognitionSource = "foto_ki" | "datenbank";
+
+export interface StoredProduct {
+  id: string;
+  eanBarcode: string;
+  product: ProductRecognition;
+  createdAt: string;
+}
+
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   "Steckdose",
   "Schalter",

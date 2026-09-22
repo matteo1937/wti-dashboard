@@ -5,35 +5,44 @@ Erkennt Hersteller, Produkttyp und Verwendungszweck von Elektromaterial
 (Steckdosen, Schalter, Sicherungsautomaten, Kabel, Verteiler, …) per Foto,
 später auch per Barcode/QR-Scan.
 
-## Status: MVP 1
+## Status: MVP 2
 
-**Foto → Claude Vision → Anzeige.** Kein Login, keine Datenbank, keine
-Grossisten-Anbindung. Das ist bewusst der einfachste End-to-End-Durchstich:
-ein Foto aufnehmen, an Claude (Vision) schicken, strukturiertes Ergebnis
-anzeigen.
+**Barcode/QR-Scan (bevorzugt) + Foto-Fallback + lokale Produkt-DB.** Barcode-
+Treffer sind zuverlässiger als Bilderkennung, deshalb: zuerst Barcode/QR
+scannen und mit der lokalen SQLite-Datenbank abgleichen. Kein Treffer? Dann
+automatisch Foto-KI-Fallback anbieten – und das Ergebnis für dieses Barcode
+speichern, damit der nächste Scan (auch von Kollegen, sobald Team-Sync in
+MVP 4 kommt) sofort einen Treffer liefert. Noch kein Login/Team, keine
+Grossisten-Anbindung.
 
 ## Etappenplan
 
 | MVP | Umfang |
 | --- | --- |
 | **MVP 1** ✅ | Foto → Claude Vision → Anzeige (Hersteller, Typ, Verwendung). Keine DB, kein Team. |
-| **MVP 2** | + Barcode/QR-Scan (html5-qrcode/ZXing), lokale Produkt-DB (Postgres), EAN-Abgleich mit Fallback auf Foto-KI. |
-| **MVP 3** | + Grossisten-Logik: Elektro-Material AG (EM) als Standard, automatischer Sonepar-Fallback falls bei EM nicht gelistet, Eldas-Nummern-Referenztabelle (CSV-Import). |
-| **MVP 4** | + Team-Funktion (Organisationen, Rollen Admin/Mitglied via Clerk), geteilte Scan-Historie, Priorisierung bereits erfasster/korrigierter Produkte, CSV/PDF-Export von Scan-Listen. |
+| **MVP 2** ✅ | + Barcode/QR-Scan (html5-qrcode), lokale Produkt-DB (SQLite), EAN-Abgleich mit Fallback auf Foto-KI, Speichern für künftige Scans. |
+| **MVP 3** | + Grossisten-Logik: Elektro-Material AG (EM) als Standard, automatischer Sonepar-Fallback falls bei EM nicht gelistet, Eldas-Nummern-Referenztabelle (CSV-Import), echte Ersatzprodukte statt nur Such-Kriterien. |
+| **MVP 4** | + Team-Funktion (Organisationen, Rollen Admin/Mitglied via Clerk), geteilte Scan-Historie, Migration SQLite → Postgres für Mehrbenutzer, Priorisierung bereits erfasster/korrigierter Produkte, CSV/PDF-Export von Scan-Listen. |
 
-Das Referenz-Datenmodell für MVP 2+ liegt bereits (noch ungenutzt) in
-[`db/schema.sql`](./db/schema.sql).
+Das Referenz-Datenmodell für MVP 4 (Postgres, Team-fähig) liegt bereits
+(noch ungenutzt) in [`db/schema.sql`](./db/schema.sql). Die aktuelle
+MVP-2-Datenbank (`data/products.db`, SQLite) ist bewusst einfacher gehalten,
+da Team-Mehrbenutzer erst in MVP 4 gebraucht wird.
 
-## Architektur (MVP 1)
+## Architektur (MVP 2)
 
 ```
-src/            React + Vite Frontend (PWA)
-  components/   CameraCapture, ProductCard
-  lib/api.ts    Ruft Backend-API auf
-server/         Node/Express Backend
-  claude.ts     Anthropic Claude Vision Aufruf (strukturiertes JSON via Tool-Use)
-  index.ts      Express-Server, Endpoint POST /api/recognize
-db/schema.sql   Referenz-Datenmodell für spätere MVPs (noch nicht aktiv)
+src/                       React + Vite Frontend (PWA)
+  components/
+    CameraCapture.tsx      Foto-Aufnahme (Datei-Input mit Kamera-Capture)
+    BarcodeScanner.tsx     Live-Kamera-Scan für Barcode/QR (html5-qrcode)
+    ProductCard.tsx        Ergebnis-Anzeige inkl. Quelle (DB vs. KI)
+  lib/api.ts                Ruft Backend-API auf
+server/                    Node/Express Backend
+  claude.ts                Anthropic Claude Vision Aufruf (strukturiertes JSON via Tool-Use)
+  db.ts                    Lokale SQLite-Produkt-DB (Node built-in node:sqlite)
+  index.ts                 Express-Server: /api/recognize, /api/products/by-ean/:ean, /api/products
+db/schema.sql               Referenz-Datenmodell für MVP 4 (Postgres, noch nicht aktiv)
 ```
 
 Der Claude API-Key liegt **nur auf dem Backend** (server/.env), niemals im
@@ -88,7 +97,6 @@ npm run typecheck # Typprüfung Frontend + Backend
 
 ## Nächste Schritte
 
-MVP 2 (Barcode/QR-Scan + lokale Produkt-DB) folgt, sobald MVP 1 auf der
-Baustelle getestet wurde. Für MVP 3 (Eldas-Nummern, EM/Sonepar-Anbindung)
-wird eine CSV-Datenquelle für Eldas-Nummern bzw. Produktdaten benötigt, da
-keine offene EM/Sonepar-API bekannt ist.
+Für MVP 3 (Eldas-Nummern, EM/Sonepar-Anbindung, echte Ersatzprodukte) wird
+eine CSV-Datenquelle für Eldas-Nummern bzw. Produktdaten benötigt, da keine
+offene EM/Sonepar-API bekannt ist.

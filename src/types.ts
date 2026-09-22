@@ -21,8 +21,12 @@ export interface ProductRecognition {
   ersatzSuchkriterien: string;
 }
 
-export interface RecognizeResponse {
+export type RecognitionSource = "foto_ki" | "datenbank";
+
+export interface ScanResponse {
   result: ProductRecognition;
+  source: RecognitionSource;
+  eanBarcode?: string;
 }
 
 export interface RecognizeErrorResponse {
