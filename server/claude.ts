@@ -51,9 +51,25 @@ const RECORD_PRODUCT_TOOL: Anthropic.Tool = {
       unsicher: {
         type: "boolean",
         description: "true, wenn Hersteller oder Produktname nur geraten sind."
+      },
+      ersatzSuchkriterien: {
+        type: "string",
+        description:
+          "KEIN konkretes Produkt/keine Artikelnummer (die kennst du nicht zuverlässig!), sondern " +
+          "eine kurze, konkrete Liste von Such-/Filterkriterien, mit denen der Installateur beim " +
+          "Grossisten (z.B. Elektro-Material AG) selbst nach einem gleichwertigen Ersatzprodukt " +
+          "suchen kann, z.B. 'LED-Einbauspot, 7W, DC350mA Konstantstrom-Treiber, IP20, Ø~55mm " +
+          "Einbaumass, Schutzklasse III'."
       }
     },
-    required: ["kategorie", "verwendungszweck", "merkmale", "konfidenz", "unsicher"]
+    required: [
+      "kategorie",
+      "verwendungszweck",
+      "merkmale",
+      "konfidenz",
+      "unsicher",
+      "ersatzSuchkriterien"
+    ]
   }
 };
 
@@ -62,8 +78,11 @@ Du hilfst Elektroinstallateuren auf der Baustelle, ein fotografiertes Produkt zu
 Steckdosen, Schalter, Sicherungsautomaten, FI/RCD-Schutzschalter, Kabel, Verteiler, Klemmen, Leuchten etc.
 Achte auf sichtbare Beschriftungen, Herstellerlogos, Farbcodes und Formfaktoren (z.B. Schweizer Typ-13-Steckdosen,
 Hager/ABB/Feller/Legrand/Gira-Designlinien). Wenn du dir nicht sicher bist, gib das ehrlich mit niedriger
-Konfidenz und unsicher=true an, anstatt Informationen zu erfinden. Antworte ausschliesslich über den
-Tool-Aufruf 'record_product' auf Deutsch.`;
+Konfidenz und unsicher=true an, anstatt Informationen zu erfinden. Erfinde insbesondere NIE eine
+konkrete Ersatzprodukt-Bezeichnung, Marke oder Artikelnummer eines anderen Produkts – dafür fehlt dir
+der Zugriff auf einen echten Produktkatalog. Gib stattdessen bei 'ersatzSuchkriterien' nur die
+technischen Such-/Filterkriterien an, mit denen der Installateur selbst beim Grossisten filtern kann.
+Antworte ausschliesslich über den Tool-Aufruf 'record_product' auf Deutsch.`;
 
 export async function recognizeProductFromImage(
   imageBase64: string,

@@ -18,6 +18,7 @@ export interface ProductRecognition {
   merkmale: string[];
   konfidenz: "hoch" | "mittel" | "niedrig";
   unsicher: boolean;
+  ersatzSuchkriterien: string;
 }
 
 export interface RecognizeResponse {

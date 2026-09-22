@@ -45,9 +45,14 @@ export function ProductCard({ result }: { result: ProductRecognition }) {
         </ul>
       )}
 
+      <div className="replacement-box">
+        <h3>🔁 Such-Kriterien für Ersatzprodukt</h3>
+        <p>{result.ersatzSuchkriterien}</p>
+      </div>
+
       <div className="future-notice">
-        Eldas-Nummer, Ersatzprodukte und Grossisten-Verfügbarkeit (EM / Sonepar) folgen in einer
-        späteren Ausbaustufe.
+        Konkretes Ersatzprodukt mit Eldas-Nummer und Grossisten-Verfügbarkeit (EM / Sonepar) folgt in
+        einer späteren Ausbaustufe – die Kriterien oben helfen dir schon jetzt beim manuellen Suchen.
       </div>
     </div>
   );
