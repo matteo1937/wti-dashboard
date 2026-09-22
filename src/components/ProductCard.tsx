@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { CorrectionForm } from "./CorrectionForm";
 import type { GrossistMatch, ProductRecognition, RecognitionSource } from "../types";
 
 const KONFIDENZ_LABEL: Record<ProductRecognition["konfidenz"], string> = {
@@ -7,7 +9,7 @@ const KONFIDENZ_LABEL: Record<ProductRecognition["konfidenz"], string> = {
 };
 
 const SOURCE_LABEL: Record<RecognitionSource, string> = {
-  datenbank: "🗄️ Bereits erfasst (lokale Datenbank)",
+  datenbank: "🗄️ Bereits erfasst (Team-Datenbank)",
   foto_ki: "🤖 KI-Foto-Erkennung"
 };
 
@@ -15,6 +17,10 @@ interface ProductCardProps {
   result: ProductRecognition;
   source: RecognitionSource;
   grossist: GrossistMatch | null;
+  savedByUserName?: string;
+  manuellKorrigiert?: boolean;
+  canCorrect?: boolean;
+  onCorrect?: (product: ProductRecognition) => Promise<void>;
 }
 
 function GrossistBox({ grossist }: { grossist: GrossistMatch | null }) {
@@ -66,7 +72,32 @@ function GrossistBox({ grossist }: { grossist: GrossistMatch | null }) {
   );
 }
 
-export function ProductCard({ result, source, grossist }: ProductCardProps) {
+export function ProductCard({
+  result,
+  source,
+  grossist,
+  savedByUserName,
+  manuellKorrigiert,
+  canCorrect,
+  onCorrect
+}: ProductCardProps) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <div className="product-card">
+        <CorrectionForm
+          initial={result}
+          onCancel={() => setEditing(false)}
+          onSubmit={async (product) => {
+            await onCorrect?.(product);
+            setEditing(false);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="product-card">
       <div className="badge-row">
@@ -75,6 +106,13 @@ export function ProductCard({ result, source, grossist }: ProductCardProps) {
         </div>
         <div className="source-badge">{SOURCE_LABEL[source]}</div>
       </div>
+
+      {source === "datenbank" && savedByUserName && (
+        <p className="team-notice">
+          {manuellKorrigiert ? "✅" : "🧑‍🔧"} {manuellKorrigiert ? "Korrigiert" : "Erfasst"} von{" "}
+          <strong>{savedByUserName}</strong>
+        </p>
+      )}
 
       {result.unsicher && (
         <p className="uncertain-notice">
@@ -115,9 +153,15 @@ export function ProductCard({ result, source, grossist }: ProductCardProps) {
         <p>{result.ersatzSuchkriterien}</p>
       </div>
 
+      {canCorrect && (
+        <button type="button" className="correct-button" onClick={() => setEditing(true)}>
+          ✏️ Korrigieren
+        </button>
+      )}
+
       <div className="future-notice">
         Automatische Ersatzprodukt-Vorschläge aus dem Katalog (kompatible Alternativen anderer
-        Hersteller) und Team-Funktionen folgen in einer späteren Ausbaustufe.
+        Hersteller) folgen in einer späteren Ausbaustufe.
       </div>
     </div>
   );

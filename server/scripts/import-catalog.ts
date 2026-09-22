@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { parse } from "csv-parse/sync";
-import { upsertCatalogRow, type CatalogImportRow } from "../db";
+import { pool, upsertCatalogRow, type CatalogImportRow } from "../db";
 import { GROSSISTEN, type Grossist } from "../types";
 
 const DEFAULT_PRIORITY: Record<Grossist, number> = {
@@ -27,7 +27,7 @@ function isGrossist(value: string): value is Grossist {
   return (GROSSISTEN as string[]).includes(value);
 }
 
-function main() {
+async function main() {
   const filePath = process.argv[2];
   if (!filePath) {
     console.error("Nutzung: npm run import:catalog -- <pfad-zur-csv>");
@@ -45,14 +45,14 @@ function main() {
   let imported = 0;
   let skipped = 0;
 
-  records.forEach((record, index) => {
+  for (const [index, record] of records.entries()) {
     const lineNo = index + 2; // Header-Zeile + 1-indexiert
 
     const eldasNummer = record.eldas_nummer?.trim();
     if (!eldasNummer) {
       console.warn(`Zeile ${lineNo}: eldas_nummer fehlt – übersprungen.`);
       skipped++;
-      return;
+      continue;
     }
 
     const grossist = record.grossist?.trim() ?? "";
@@ -61,7 +61,7 @@ function main() {
         `Zeile ${lineNo}: unbekannter Grossist "${record.grossist}" (erlaubt: ${GROSSISTEN.join(", ")}) – übersprungen.`
       );
       skipped++;
-      return;
+      continue;
     }
 
     const row: CatalogImportRow = {
@@ -79,11 +79,15 @@ function main() {
       preisChf: parseNumber(record.preis_chf)
     };
 
-    upsertCatalogRow(row);
+    await upsertCatalogRow(row);
     imported++;
-  });
+  }
 
   console.log(`Import abgeschlossen: ${imported} Zeilen importiert, ${skipped} übersprungen.`);
+  await pool.end();
 }
 
-main();
+main().catch((err) => {
+  console.error("Import fehlgeschlagen:", err);
+  process.exit(1);
+});

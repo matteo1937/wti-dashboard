@@ -1,85 +1,81 @@
-import { DatabaseSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-import type { Grossist, GrossistMatch, ProductRecognition, StoredProduct } from "./types";
+import { Pool } from "pg";
+import type { Grossist, GrossistMatch, ProductRecognition } from "./types";
 
-const DB_PATH = process.env.SQLITE_PATH ?? "data/products.db";
-mkdirSync(dirname(DB_PATH), { recursive: true });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-export const db = new DatabaseSync(DB_PATH);
+export interface StoredProduct {
+  id: string;
+  eanBarcode: string;
+  product: ProductRecognition;
+  savedByUserId: string;
+  savedByUserName: string;
+  manuellKorrigiert: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
-    ean_barcode TEXT UNIQUE NOT NULL,
-    product_json TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS catalog_products (
-    id TEXT PRIMARY KEY,
-    hersteller TEXT,
-    bezeichnung TEXT,
-    typ TEXT,
-    kategorie TEXT,
-    eldas_nummer TEXT UNIQUE NOT NULL,
-    ean_barcode TEXT,
-    beschreibung TEXT,
-    updated_at TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_catalog_ean ON catalog_products(ean_barcode);
-  CREATE INDEX IF NOT EXISTS idx_catalog_hersteller_typ ON catalog_products(hersteller, typ);
-
-  CREATE TABLE IF NOT EXISTS supplier_listings (
-    id TEXT PRIMARY KEY,
-    product_id TEXT NOT NULL REFERENCES catalog_products(id) ON DELETE CASCADE,
-    grossist TEXT NOT NULL,
-    prioritaet INTEGER NOT NULL,
-    shop_url TEXT,
-    verfuegbar INTEGER NOT NULL,
-    preis_chf REAL,
-    checked_at TEXT NOT NULL,
-    UNIQUE(product_id, grossist)
-  );
-  CREATE INDEX IF NOT EXISTS idx_listings_product ON supplier_listings(product_id, prioritaet);
-`);
-
-function rowToStoredProduct(row: {
+interface ProductRow {
   id: string;
   ean_barcode: string;
-  product_json: string;
-  created_at: string;
-}): StoredProduct {
+  product_json: ProductRecognition;
+  saved_by_user_id: string;
+  saved_by_user_name: string;
+  manuell_korrigiert: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+function rowToStoredProduct(row: ProductRow): StoredProduct {
   return {
     id: row.id,
     eanBarcode: row.ean_barcode,
-    product: JSON.parse(row.product_json) as ProductRecognition,
-    createdAt: row.created_at
+    product: row.product_json,
+    savedByUserId: row.saved_by_user_id,
+    savedByUserName: row.saved_by_user_name,
+    manuellKorrigiert: row.manuell_korrigiert,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   };
 }
 
-export function findProductByEan(ean: string): StoredProduct | null {
-  const stmt = db.prepare("SELECT * FROM products WHERE ean_barcode = ?");
-  const row = stmt.get(ean) as
-    | { id: string; ean_barcode: string; product_json: string; created_at: string }
-    | undefined;
-  return row ? rowToStoredProduct(row) : null;
+export async function findProductByEan(orgId: string, ean: string): Promise<StoredProduct | null> {
+  const { rows } = await pool.query<ProductRow>(
+    "SELECT * FROM products WHERE org_id = $1 AND ean_barcode = $2",
+    [orgId, ean]
+  );
+  return rows[0] ? rowToStoredProduct(rows[0]) : null;
 }
 
-export function saveProduct(ean: string, product: ProductRecognition): StoredProduct {
-  const existing = findProductByEan(ean);
-  const id = existing?.id ?? randomUUID();
-  const createdAt = existing?.createdAt ?? new Date().toISOString();
-
-  const stmt = db.prepare(`
-    INSERT INTO products (id, ean_barcode, product_json, created_at)
-    VALUES (?, ?, ?, ?)
-    ON CONFLICT(ean_barcode) DO UPDATE SET product_json = excluded.product_json
-  `);
-  stmt.run(id, ean, JSON.stringify(product), createdAt);
-
-  return { id, eanBarcode: ean, product, createdAt };
+export async function saveProduct(params: {
+  orgId: string;
+  ean: string;
+  product: ProductRecognition;
+  userId: string;
+  userName: string;
+  manuellKorrigiert?: boolean;
+}): Promise<StoredProduct> {
+  const { rows } = await pool.query<ProductRow>(
+    `
+    INSERT INTO products (org_id, ean_barcode, product_json, saved_by_user_id, saved_by_user_name, manuell_korrigiert)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    ON CONFLICT (org_id, ean_barcode) DO UPDATE SET
+      product_json = excluded.product_json,
+      saved_by_user_id = excluded.saved_by_user_id,
+      saved_by_user_name = excluded.saved_by_user_name,
+      manuell_korrigiert = excluded.manuell_korrigiert,
+      updated_at = now()
+    RETURNING *
+    `,
+    [
+      params.orgId,
+      params.ean,
+      JSON.stringify(params.product),
+      params.userId,
+      params.userName,
+      params.manuellKorrigiert ?? false
+    ]
+  );
+  return rowToStoredProduct(rows[0]);
 }
 
 export interface CatalogImportRow {
@@ -97,61 +93,37 @@ export interface CatalogImportRow {
   preisChf: number | null;
 }
 
-export function upsertCatalogRow(row: CatalogImportRow): void {
-  const now = new Date().toISOString();
-
-  const existing = db
-    .prepare("SELECT id FROM catalog_products WHERE eldas_nummer = ?")
-    .get(row.eldasNummer) as { id: string } | undefined;
-  const productId = existing?.id ?? randomUUID();
-
-  db.prepare(
+export async function upsertCatalogRow(row: CatalogImportRow): Promise<void> {
+  const { rows } = await pool.query<{ id: string }>(
     `
-    INSERT INTO catalog_products
-      (id, hersteller, bezeichnung, typ, kategorie, eldas_nummer, ean_barcode, beschreibung, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(eldas_nummer) DO UPDATE SET
+    INSERT INTO catalog_products (hersteller, bezeichnung, typ, kategorie, eldas_nummer, ean_barcode, beschreibung, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+    ON CONFLICT (eldas_nummer) DO UPDATE SET
       hersteller = excluded.hersteller,
       bezeichnung = excluded.bezeichnung,
       typ = excluded.typ,
       kategorie = excluded.kategorie,
       ean_barcode = excluded.ean_barcode,
       beschreibung = excluded.beschreibung,
-      updated_at = excluded.updated_at
-  `
-  ).run(
-    productId,
-    row.hersteller,
-    row.bezeichnung,
-    row.typ,
-    row.kategorie,
-    row.eldasNummer,
-    row.eanBarcode,
-    row.beschreibung,
-    now
+      updated_at = now()
+    RETURNING id
+    `,
+    [row.hersteller, row.bezeichnung, row.typ, row.kategorie, row.eldasNummer, row.eanBarcode, row.beschreibung]
   );
+  const productId = rows[0].id;
 
-  db.prepare(
+  await pool.query(
     `
-    INSERT INTO supplier_listings
-      (id, product_id, grossist, prioritaet, shop_url, verfuegbar, preis_chf, checked_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(product_id, grossist) DO UPDATE SET
+    INSERT INTO supplier_listings (product_id, grossist, prioritaet, shop_url, verfuegbar, preis_chf, checked_at)
+    VALUES ($1, $2, $3, $4, $5, $6, now())
+    ON CONFLICT (product_id, grossist) DO UPDATE SET
       prioritaet = excluded.prioritaet,
       shop_url = excluded.shop_url,
       verfuegbar = excluded.verfuegbar,
       preis_chf = excluded.preis_chf,
-      checked_at = excluded.checked_at
-  `
-  ).run(
-    randomUUID(),
-    productId,
-    row.grossist,
-    row.prioritaet,
-    row.shopUrl,
-    row.verfuegbar ? 1 : 0,
-    row.preisChf,
-    now
+      checked_at = now()
+    `,
+    [productId, row.grossist, row.prioritaet, row.shopUrl, row.verfuegbar, row.preisChf]
   );
 }
 
@@ -161,53 +133,156 @@ interface CatalogProductRow {
 }
 
 interface SupplierListingRow {
-  grossist: string;
+  grossist: Grossist;
   shop_url: string | null;
-  verfuegbar: number;
-  preis_chf: number | null;
+  verfuegbar: boolean;
+  preis_chf: string | null;
 }
 
-function pickBestListing(productId: string): SupplierListingRow | null {
-  const listings = db
-    .prepare("SELECT * FROM supplier_listings WHERE product_id = ? ORDER BY prioritaet ASC")
-    .all(productId) as unknown as SupplierListingRow[];
-  return listings.find((listing) => listing.verfuegbar) ?? listings[0] ?? null;
+async function pickBestListing(productId: string): Promise<SupplierListingRow | null> {
+  const { rows } = await pool.query<SupplierListingRow>(
+    "SELECT * FROM supplier_listings WHERE product_id = $1 ORDER BY prioritaet ASC",
+    [productId]
+  );
+  return rows.find((listing) => listing.verfuegbar) ?? rows[0] ?? null;
 }
 
-function toMatch(product: CatalogProductRow, matchQuality: "ean" | "fuzzy"): GrossistMatch | null {
-  const listing = pickBestListing(product.id);
+async function toMatch(
+  product: CatalogProductRow,
+  matchQuality: "ean" | "fuzzy"
+): Promise<GrossistMatch | null> {
+  const listing = await pickBestListing(product.id);
   if (!listing) return null;
 
   return {
-    grossist: listing.grossist as Grossist,
+    grossist: listing.grossist,
     eldasNummer: product.eldas_nummer,
     shopUrl: listing.shop_url,
-    verfuegbar: Boolean(listing.verfuegbar),
-    preisChf: listing.preis_chf,
+    verfuegbar: listing.verfuegbar,
+    preisChf: listing.preis_chf != null ? Number(listing.preis_chf) : null,
     matchQuality
   };
 }
 
-export function findCatalogMatch(params: {
+export async function findCatalogMatch(params: {
   eanBarcode?: string | null;
   hersteller?: string | null;
   typBezeichnung?: string | null;
-}): GrossistMatch | null {
+}): Promise<GrossistMatch | null> {
   if (params.eanBarcode) {
-    const row = db
-      .prepare("SELECT id, eldas_nummer FROM catalog_products WHERE ean_barcode = ?")
-      .get(params.eanBarcode) as CatalogProductRow | undefined;
-    if (row) return toMatch(row, "ean");
+    const { rows } = await pool.query<CatalogProductRow>(
+      "SELECT id, eldas_nummer FROM catalog_products WHERE ean_barcode = $1",
+      [params.eanBarcode]
+    );
+    if (rows[0]) return toMatch(rows[0], "ean");
   }
 
   if (params.hersteller && params.typBezeichnung) {
-    const row = db
-      .prepare(
-        "SELECT id, eldas_nummer FROM catalog_products WHERE lower(hersteller) = lower(?) AND lower(typ) LIKE lower(?)"
-      )
-      .get(params.hersteller, `%${params.typBezeichnung}%`) as CatalogProductRow | undefined;
-    if (row) return toMatch(row, "fuzzy");
+    const { rows } = await pool.query<CatalogProductRow>(
+      "SELECT id, eldas_nummer FROM catalog_products WHERE lower(hersteller) = lower($1) AND lower(typ) LIKE lower($2)",
+      [params.hersteller, `%${params.typBezeichnung}%`]
+    );
+    if (rows[0]) return toMatch(rows[0], "fuzzy");
   }
 
   return null;
+}
+
+export interface ScanLogEntry {
+  orgId: string;
+  userId: string;
+  userName: string;
+  erkanntVia: "foto_ki" | "barcode_db";
+  eanBarcode: string | null;
+  produkt: ProductRecognition;
+  projektTag: string | null;
+  manuellKorrigiert: boolean;
+}
+
+export async function logScan(entry: ScanLogEntry): Promise<void> {
+  await pool.query(
+    `
+    INSERT INTO scans (org_id, user_id, user_name, erkannt_via, ean_barcode, produkt_json, projekt_tag, manuell_korrigiert)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `,
+    [
+      entry.orgId,
+      entry.userId,
+      entry.userName,
+      entry.erkanntVia,
+      entry.eanBarcode,
+      JSON.stringify(entry.produkt),
+      entry.projektTag,
+      entry.manuellKorrigiert
+    ]
+  );
+}
+
+export interface ScanHistoryRow {
+  id: string;
+  userId: string;
+  userName: string;
+  erkanntVia: "foto_ki" | "barcode_db";
+  eanBarcode: string | null;
+  produkt: ProductRecognition;
+  projektTag: string | null;
+  manuellKorrigiert: boolean;
+  createdAt: Date;
+}
+
+interface RawScanRow {
+  id: string;
+  user_id: string;
+  user_name: string;
+  erkannt_via: "foto_ki" | "barcode_db";
+  ean_barcode: string | null;
+  produkt_json: ProductRecognition;
+  projekt_tag: string | null;
+  manuell_korrigiert: boolean;
+  created_at: Date;
+}
+
+export async function listScans(params: {
+  orgId: string;
+  userId?: string;
+  projektTag?: string;
+  von?: string;
+  bis?: string;
+}): Promise<ScanHistoryRow[]> {
+  const conditions = ["org_id = $1"];
+  const values: unknown[] = [params.orgId];
+
+  if (params.userId) {
+    values.push(params.userId);
+    conditions.push(`user_id = $${values.length}`);
+  }
+  if (params.projektTag) {
+    values.push(params.projektTag);
+    conditions.push(`projekt_tag = $${values.length}`);
+  }
+  if (params.von) {
+    values.push(params.von);
+    conditions.push(`created_at >= $${values.length}`);
+  }
+  if (params.bis) {
+    values.push(params.bis);
+    conditions.push(`created_at <= $${values.length}`);
+  }
+
+  const { rows } = await pool.query<RawScanRow>(
+    `SELECT * FROM scans WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC LIMIT 500`,
+    values
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    userName: row.user_name,
+    erkanntVia: row.erkannt_via,
+    eanBarcode: row.ean_barcode,
+    produkt: row.produkt_json,
+    projektTag: row.projekt_tag,
+    manuellKorrigiert: row.manuell_korrigiert,
+    createdAt: row.created_at
+  }));
 }

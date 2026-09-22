@@ -1,177 +1,65 @@
-import { useEffect, useState } from "react";
-import { BarcodeScanner } from "./components/BarcodeScanner";
-import { CameraCapture } from "./components/CameraCapture";
-import { ProductCard } from "./components/ProductCard";
-import { lookupProductByBarcode, recognizeProduct, saveProductForBarcode } from "./lib/api";
-import type { GrossistMatch, ProductRecognition, RecognitionSource } from "./types";
+import { useState } from "react";
+import { OrganizationSwitcher, SignedIn, SignedOut, SignIn, useAuth } from "@clerk/clerk-react";
+import { TeamHeader } from "./components/TeamHeader";
+import { ScannerView } from "./components/ScannerView";
+import { HistoryView } from "./components/HistoryView";
+import type { UserRole } from "./types";
 
-type Mode = "foto" | "barcode";
-type Status = "idle" | "scanning" | "loading" | "success" | "not_found" | "error";
-type SaveState = "idle" | "saving" | "saved" | "error";
+type View = "scanner" | "history";
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>("foto");
-  const [status, setStatus] = useState<Status>("idle");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [result, setResult] = useState<ProductRecognition | null>(null);
-  const [source, setSource] = useState<RecognitionSource | null>(null);
-  const [grossist, setGrossist] = useState<GrossistMatch | null>(null);
-  const [pendingEan, setPendingEan] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const { orgId, orgRole } = useAuth();
+  const [view, setView] = useState<View>("scanner");
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
-
-  function resetResult() {
-    setStatus("idle");
-    setResult(null);
-    setSource(null);
-    setGrossist(null);
-    setError(null);
-    setSaveState("idle");
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
-  }
-
-  function switchMode(nextMode: Mode) {
-    setMode(nextMode);
-    setPendingEan(null);
-    resetResult();
-  }
-
-  async function handleCapture(file: File) {
-    setStatus("loading");
-    setError(null);
-    setResult(null);
-    setSaveState("idle");
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(file));
-
-    try {
-      const scan = await recognizeProduct(file);
-      setResult(scan.result);
-      setSource(scan.source);
-      setGrossist(scan.grossist);
-      setStatus("success");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unbekannter Fehler bei der Erkennung.");
-      setStatus("error");
-    }
-  }
-
-  async function handleBarcodeDetected(code: string) {
-    setStatus("loading");
-    setError(null);
-    setResult(null);
-    setPendingEan(null);
-    setSaveState("idle");
-
-    try {
-      const scan = await lookupProductByBarcode(code);
-      if (scan) {
-        setResult(scan.result);
-        setSource(scan.source);
-        setGrossist(scan.grossist);
-        setStatus("success");
-      } else {
-        setPendingEan(code);
-        setStatus("not_found");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unbekannter Fehler beim Barcode-Abgleich.");
-      setStatus("error");
-    }
-  }
-
-  async function handleSaveForBarcode() {
-    if (!pendingEan || !result) return;
-    setSaveState("saving");
-    try {
-      const saved = await saveProductForBarcode(pendingEan, result);
-      setGrossist(saved.grossist);
-      setSaveState("saved");
-    } catch {
-      setSaveState("error");
-    }
-  }
+  const role: UserRole | null = orgId ? (orgRole === "org:admin" ? "admin" : "mitglied") : null;
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Elektro Scanner</h1>
-        <p>Produkt fotografieren oder Barcode scannen – KI erkennt Hersteller, Typ und Verwendung.</p>
-      </header>
-
-      <main className="app-main">
-        <div className="mode-tabs">
-          <button
-            type="button"
-            className={`mode-tab ${mode === "barcode" ? "active" : ""}`}
-            onClick={() => switchMode("barcode")}
-          >
-            🔳 Barcode / QR
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${mode === "foto" ? "active" : ""}`}
-            onClick={() => switchMode("foto")}
-          >
-            📷 Foto
-          </button>
+      <SignedOut>
+        <div className="sign-in-wrapper">
+          <h1>Elektro Scanner</h1>
+          <p>Bitte anmelden, um zu scannen.</p>
+          <SignIn routing="hash" />
         </div>
+      </SignedOut>
 
-        {mode === "barcode" && status !== "success" && status !== "not_found" && (
-          <BarcodeScanner onDetected={handleBarcodeDetected} />
-        )}
+      <SignedIn>
+        <TeamHeader role={role} />
 
-        {mode === "foto" && (
-          <CameraCapture disabled={status === "loading"} onCapture={handleCapture} />
-        )}
-
-        {status === "not_found" && pendingEan && (
-          <div className="not-found-box">
-            <p>
-              📦 Barcode <strong>{pendingEan}</strong> ist noch nicht in der lokalen Datenbank.
-              <br />
-              Bitte jetzt ein Foto machen – die Erkennung wird danach für dieses Barcode gespeichert.
-            </p>
-            <CameraCapture disabled={false} onCapture={handleCapture} />
+        {!orgId ? (
+          <div className="no-org-box">
+            <h1>Elektro Scanner</h1>
+            <p>Bitte ein Team auswählen oder neu erstellen, um den Scanner zu nutzen.</p>
+            <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/" afterCreateOrganizationUrl="/" />
           </div>
-        )}
+        ) : (
+          <main className="app-main">
+            <header className="app-header">
+              <h1>Elektro Scanner</h1>
+              <p>Produkt fotografieren oder Barcode scannen – im Team geteilt.</p>
+            </header>
 
-        {previewUrl && (
-          <img className="preview-image" src={previewUrl} alt="Aufgenommenes Produkt" />
-        )}
-
-        {status === "loading" && <p className="status-message">🔍 Wird geprüft …</p>}
-
-        {status === "error" && error && <p className="status-message error">❌ {error}</p>}
-
-        {status === "success" && result && source && (
-          <>
-            <ProductCard result={result} source={source} grossist={grossist} />
-
-            {pendingEan && source === "foto_ki" && (
+            <div className="view-tabs">
               <button
                 type="button"
-                className="save-button"
-                disabled={saveState === "saving" || saveState === "saved"}
-                onClick={handleSaveForBarcode}
+                className={`view-tab ${view === "scanner" ? "active" : ""}`}
+                onClick={() => setView("scanner")}
               >
-                {saveState === "saved"
-                  ? "✅ Gespeichert – nächstes Mal direkter Treffer"
-                  : saveState === "saving"
-                  ? "Speichere …"
-                  : `💾 Für Barcode ${pendingEan} speichern`}
+                🔍 Scannen
               </button>
-            )}
-          </>
+              <button
+                type="button"
+                className={`view-tab ${view === "history" ? "active" : ""}`}
+                onClick={() => setView("history")}
+              >
+                📋 Scan-Historie
+              </button>
+            </div>
+
+            {view === "scanner" ? <ScannerView role={role ?? "mitglied"} /> : <HistoryView />}
+          </main>
         )}
-      </main>
+      </SignedIn>
     </div>
   );
 }

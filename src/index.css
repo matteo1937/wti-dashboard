@@ -335,3 +335,233 @@ body {
   font-size: 0.8rem;
   color: var(--warn);
 }
+
+.team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0 1rem;
+  border-bottom: 1px solid var(--surface-alt);
+  margin-bottom: 1rem;
+}
+
+.team-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.role-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.role-badge.role-admin {
+  background: rgba(250, 204, 21, 0.15);
+  color: var(--accent);
+}
+
+.role-badge.role-mitglied {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+}
+
+.sign-in-wrapper,
+.no-org-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding-top: 2rem;
+}
+
+.sign-in-wrapper h1,
+.no-org-box h1 {
+  margin: 0;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.view-tab {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--surface-alt);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.projekt-tag-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.projekt-tag-field input {
+  padding: 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-alt);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.team-notice {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.correct-button {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--surface-alt);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.correction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.correction-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.correction-form input,
+.correction-form select,
+.correction-form textarea {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-alt);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.correction-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.correction-actions button {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-alt);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.correction-actions button[type="submit"] {
+  background: var(--accent);
+  color: #1c1917;
+  border-color: var(--accent);
+}
+
+.history-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.history-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.history-filters input {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-alt);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.history-filters button {
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--surface-alt);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.history-export {
+  display: flex;
+  gap: 1rem;
+}
+
+.export-link {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-item {
+  background: var(--surface);
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.history-item-meta {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

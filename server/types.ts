@@ -23,13 +23,6 @@ export interface ProductRecognition {
 
 export type RecognitionSource = "foto_ki" | "datenbank";
 
-export interface StoredProduct {
-  id: string;
-  eanBarcode: string;
-  product: ProductRecognition;
-  createdAt: string;
-}
-
 export type Grossist = "EM" | "Sonepar" | "Otto Fischer" | "Bugnard";
 
 export const GROSSISTEN: Grossist[] = ["EM", "Sonepar", "Otto Fischer", "Bugnard"];
