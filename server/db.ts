@@ -55,6 +55,25 @@ function seedMembers() {
     .map((n) => n.trim())
     .filter(Boolean);
 
+  const existing = db.prepare("SELECT name FROM members ORDER BY id").all() as { name: string }[];
+  const existingNames = existing.map((m) => m.name);
+  const namesMatch =
+    existingNames.length === names.length && existingNames.every((n, i) => n === names[i]);
+
+  if (existingNames.length > 0 && !namesMatch) {
+    const { c: activityCount } = db
+      .prepare(
+        "SELECT (SELECT COUNT(*) FROM requests) + (SELECT COUNT(*) FROM votes) AS c"
+      )
+      .get() as { c: number };
+    // MEMBER_NAMES wurde geändert (z.B. Platzhalter durch echte Namen ersetzt).
+    // Solange noch keine echten Daten existieren, ersetzen wir die alten
+    // Seed-Mitglieder komplett statt sie stehen zu lassen.
+    if (activityCount === 0) {
+      db.exec("DELETE FROM members");
+    }
+  }
+
   const insert = db.prepare("INSERT OR IGNORE INTO members (name) VALUES (?)");
   for (const name of names) {
     insert.run(name);
