@@ -1,4 +1,4 @@
-import type { ProductRecognition, RecognitionSource } from "../types";
+import type { GrossistMatch, ProductRecognition, RecognitionSource } from "../types";
 
 const KONFIDENZ_LABEL: Record<ProductRecognition["konfidenz"], string> = {
   hoch: "Hohe Zuverlässigkeit",
@@ -14,9 +14,59 @@ const SOURCE_LABEL: Record<RecognitionSource, string> = {
 interface ProductCardProps {
   result: ProductRecognition;
   source: RecognitionSource;
+  grossist: GrossistMatch | null;
 }
 
-export function ProductCard({ result, source }: ProductCardProps) {
+function GrossistBox({ grossist }: { grossist: GrossistMatch | null }) {
+  if (!grossist) {
+    return (
+      <div className="grossist-box grossist-box-empty">
+        <h3>🏬 Grossist</h3>
+        <p>
+          Kein Katalogtreffer. Entweder ist der Produktkatalog noch nicht importiert, oder dieses
+          Produkt ist (noch) nicht darin gelistet.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`grossist-box grossist-${grossist.grossist === "EM" ? "em" : "other"}`}>
+      <div className="grossist-header">
+        <span className="grossist-badge">{grossist.grossist}</span>
+        <span className={grossist.verfuegbar ? "availability ok" : "availability out"}>
+          {grossist.verfuegbar ? "✅ Verfügbar" : "❌ Nicht verfügbar"}
+        </span>
+      </div>
+
+      <dl className="product-details">
+        <dt>Eldas-Nummer</dt>
+        <dd>{grossist.eldasNummer}</dd>
+
+        {grossist.preisChf != null && (
+          <>
+            <dt>Preis</dt>
+            <dd>CHF {grossist.preisChf.toFixed(2)}</dd>
+          </>
+        )}
+      </dl>
+
+      {grossist.shopUrl && (
+        <a className="shop-link" href={grossist.shopUrl} target="_blank" rel="noopener noreferrer">
+          Zum Angebot bei {grossist.grossist} →
+        </a>
+      )}
+
+      {grossist.matchQuality === "fuzzy" && (
+        <p className="fuzzy-notice">
+          ⚠️ Automatisch anhand Hersteller/Typ zugeordnet – bitte vor Bestellung prüfen.
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function ProductCard({ result, source, grossist }: ProductCardProps) {
   return (
     <div className="product-card">
       <div className="badge-row">
@@ -58,14 +108,16 @@ export function ProductCard({ result, source }: ProductCardProps) {
         </ul>
       )}
 
+      <GrossistBox grossist={grossist} />
+
       <div className="replacement-box">
         <h3>🔁 Such-Kriterien für Ersatzprodukt</h3>
         <p>{result.ersatzSuchkriterien}</p>
       </div>
 
       <div className="future-notice">
-        Konkretes Ersatzprodukt mit Eldas-Nummer und Grossisten-Verfügbarkeit (EM / Sonepar) folgt in
-        einer späteren Ausbaustufe – die Kriterien oben helfen dir schon jetzt beim manuellen Suchen.
+        Automatische Ersatzprodukt-Vorschläge aus dem Katalog (kompatible Alternativen anderer
+        Hersteller) und Team-Funktionen folgen in einer späteren Ausbaustufe.
       </div>
     </div>
   );

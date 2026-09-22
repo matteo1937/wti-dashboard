@@ -268,3 +268,70 @@ body {
   margin: 0;
   font-size: 0.9rem;
 }
+
+.grossist-box {
+  margin-top: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.grossist-box-empty {
+  background: var(--surface-alt);
+}
+
+.grossist-box-empty p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.grossist-em {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.grossist-other {
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.grossist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.grossist-badge {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.availability {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.availability.ok {
+  color: var(--ok);
+}
+
+.availability.out {
+  color: var(--danger);
+}
+
+.shop-link {
+  color: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.fuzzy-notice {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--warn);
+}

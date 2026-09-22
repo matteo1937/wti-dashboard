@@ -23,10 +23,22 @@ export interface ProductRecognition {
 
 export type RecognitionSource = "foto_ki" | "datenbank";
 
+export type Grossist = "EM" | "Sonepar" | "Otto Fischer" | "Bugnard";
+
+export interface GrossistMatch {
+  grossist: Grossist;
+  eldasNummer: string;
+  shopUrl: string | null;
+  verfuegbar: boolean;
+  preisChf: number | null;
+  matchQuality: "ean" | "fuzzy";
+}
+
 export interface ScanResponse {
   result: ProductRecognition;
   source: RecognitionSource;
   eanBarcode?: string;
+  grossist: GrossistMatch | null;
 }
 
 export interface RecognizeErrorResponse {

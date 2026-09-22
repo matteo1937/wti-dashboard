@@ -2,7 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import { isSupportedMediaType, recognizeProductFromImage } from "./claude";
-import { findProductByEan, saveProduct } from "./db";
+import { findCatalogMatch, findProductByEan, saveProduct } from "./db";
 import type { ProductRecognition } from "./types";
 
 const app = express();
@@ -32,7 +32,11 @@ app.post("/api/recognize", async (req, res) => {
 
   try {
     const result = await recognizeProductFromImage(imageBase64, mediaType);
-    res.json({ result, source: "foto_ki" });
+    const grossist = findCatalogMatch({
+      hersteller: result.hersteller,
+      typBezeichnung: result.typBezeichnung
+    });
+    res.json({ result, source: "foto_ki", grossist });
   } catch (err) {
     console.error("Fehler bei Produkterkennung:", err);
     const message = err instanceof Error ? err.message : "Unbekannter Fehler bei der Erkennung.";
@@ -53,7 +57,13 @@ app.get("/api/products/by-ean/:ean", (req, res) => {
     return;
   }
 
-  res.json({ result: stored.product, source: "datenbank", eanBarcode: stored.eanBarcode });
+  const grossist = findCatalogMatch({
+    eanBarcode: stored.eanBarcode,
+    hersteller: stored.product.hersteller,
+    typBezeichnung: stored.product.typBezeichnung
+  });
+
+  res.json({ result: stored.product, source: "datenbank", eanBarcode: stored.eanBarcode, grossist });
 });
 
 app.post("/api/products", (req, res) => {
@@ -72,7 +82,12 @@ app.post("/api/products", (req, res) => {
   }
 
   const stored = saveProduct(eanBarcode.trim(), product);
-  res.status(201).json({ result: stored.product, source: "datenbank", eanBarcode: stored.eanBarcode });
+  const grossist = findCatalogMatch({
+    eanBarcode: stored.eanBarcode,
+    hersteller: stored.product.hersteller,
+    typBezeichnung: stored.product.typBezeichnung
+  });
+  res.status(201).json({ result: stored.product, source: "datenbank", eanBarcode: stored.eanBarcode, grossist });
 });
 
 const port = Number(process.env.PORT ?? 8787);

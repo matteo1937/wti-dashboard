@@ -3,7 +3,7 @@ import { BarcodeScanner } from "./components/BarcodeScanner";
 import { CameraCapture } from "./components/CameraCapture";
 import { ProductCard } from "./components/ProductCard";
 import { lookupProductByBarcode, recognizeProduct, saveProductForBarcode } from "./lib/api";
-import type { ProductRecognition, RecognitionSource } from "./types";
+import type { GrossistMatch, ProductRecognition, RecognitionSource } from "./types";
 
 type Mode = "foto" | "barcode";
 type Status = "idle" | "scanning" | "loading" | "success" | "not_found" | "error";
@@ -15,6 +15,7 @@ export default function App() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [result, setResult] = useState<ProductRecognition | null>(null);
   const [source, setSource] = useState<RecognitionSource | null>(null);
+  const [grossist, setGrossist] = useState<GrossistMatch | null>(null);
   const [pendingEan, setPendingEan] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export default function App() {
     setStatus("idle");
     setResult(null);
     setSource(null);
+    setGrossist(null);
     setError(null);
     setSaveState("idle");
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -53,6 +55,7 @@ export default function App() {
       const scan = await recognizeProduct(file);
       setResult(scan.result);
       setSource(scan.source);
+      setGrossist(scan.grossist);
       setStatus("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler bei der Erkennung.");
@@ -72,6 +75,7 @@ export default function App() {
       if (scan) {
         setResult(scan.result);
         setSource(scan.source);
+        setGrossist(scan.grossist);
         setStatus("success");
       } else {
         setPendingEan(code);
@@ -87,7 +91,8 @@ export default function App() {
     if (!pendingEan || !result) return;
     setSaveState("saving");
     try {
-      await saveProductForBarcode(pendingEan, result);
+      const saved = await saveProductForBarcode(pendingEan, result);
+      setGrossist(saved.grossist);
       setSaveState("saved");
     } catch {
       setSaveState("error");
@@ -148,7 +153,7 @@ export default function App() {
 
         {status === "success" && result && source && (
           <>
-            <ProductCard result={result} source={source} />
+            <ProductCard result={result} source={source} grossist={grossist} />
 
             {pendingEan && source === "foto_ki" && (
               <button

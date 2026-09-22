@@ -30,6 +30,19 @@ export interface StoredProduct {
   createdAt: string;
 }
 
+export type Grossist = "EM" | "Sonepar" | "Otto Fischer" | "Bugnard";
+
+export const GROSSISTEN: Grossist[] = ["EM", "Sonepar", "Otto Fischer", "Bugnard"];
+
+export interface GrossistMatch {
+  grossist: Grossist;
+  eldasNummer: string;
+  shopUrl: string | null;
+  verfuegbar: boolean;
+  preisChf: number | null;
+  matchQuality: "ean" | "fuzzy";
+}
+
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   "Steckdose",
   "Schalter",
