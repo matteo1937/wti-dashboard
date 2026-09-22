@@ -33,6 +33,9 @@ export default defineConfig({
     })
   ],
   server: {
+    // Erlaubt Zugriff über einen Cloudflare Quick Tunnel (z.B. für Tests übers
+    // Mobilfunknetz), da Vite standardmässig unbekannte Hostnamen blockt.
+    allowedHosts: [".trycloudflare.com"],
     proxy: {
       "/api": {
         target: `http://localhost:${backendPort}`,
