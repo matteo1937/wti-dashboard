@@ -110,14 +110,34 @@ export function ProductCard({ result, source, grossist }: ProductCardProps) {
 
       <GrossistBox grossist={grossist} />
 
+      {result.ersatzprodukte.length > 0 && (
+        <div className="alternatives-box">
+          <h3>🔄 Empfohlene Ersatzprodukte</h3>
+          <ul className="alternatives-list">
+            {result.ersatzprodukte.map((alt) => (
+              <li key={`${alt.hersteller}-${alt.produktlinie}`}>
+                <strong>
+                  {alt.hersteller} {alt.produktlinie}
+                </strong>
+                <span>{alt.kompatibilitaetshinweis}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="alternatives-disclaimer">
+            ⚠️ KI-Einschätzung basierend auf allgemeinem Marktwissen, kein Katalog-Abgleich. Keine
+            konkreten Artikelnummern – bitte Kompatibilität vor Bestellung selbst prüfen.
+          </p>
+        </div>
+      )}
+
       <div className="replacement-box">
         <h3>🔁 Such-Kriterien für Ersatzprodukt</h3>
         <p>{result.ersatzSuchkriterien}</p>
       </div>
 
       <div className="future-notice">
-        Automatische Ersatzprodukt-Vorschläge aus dem Katalog (kompatible Alternativen anderer
-        Hersteller) und Team-Funktionen folgen in einer späteren Ausbaustufe.
+        Konkrete, katalogbasierte Ersatzprodukt-Vorschläge (mit Eldas-Nummer) folgen, sobald echte
+        Grossisten-Daten importiert sind.
       </div>
     </div>
   );

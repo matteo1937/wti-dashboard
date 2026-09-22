@@ -61,6 +61,33 @@ const RECORD_PRODUCT_TOOL: Anthropic.Tool = {
           "Grossisten (z.B. Elektro-Material AG) selbst nach einem gleichwertigen Ersatzprodukt " +
           "suchen kann, z.B. 'LED-Einbauspot, 7W, DC350mA Konstantstrom-Treiber, IP20, Ø~55mm " +
           "Einbaumass, Schutzklasse III'."
+      },
+      ersatzprodukte: {
+        type: "array",
+        description:
+          "1-3 bekannte Hersteller/Produktlinien, die in der Schweiz üblicherweise als kompatible " +
+          "Alternative zu diesem Produkt gelten (z.B. 'Hager' als Alternative zu 'Feller' bei " +
+          "Schweizer Steckdosen). Das ist allgemeines Marktwissen über Hersteller-Produktlinien, " +
+          "KEIN Katalog-Abgleich. Leeres Array, wenn Kategorie/Hersteller zu unklar sind, um seriös " +
+          "eine Alternative zu nennen. NIE eine konkrete Artikelnummer, Preis oder Verfügbarkeit " +
+          "nennen – das weisst du nicht.",
+        items: {
+          type: "object",
+          properties: {
+            hersteller: { type: "string", description: "Name des alternativen Herstellers." },
+            produktlinie: {
+              type: "string",
+              description: "Name der Produktlinie/Serie, die als Ersatz infrage kommt."
+            },
+            kompatibilitaetshinweis: {
+              type: "string",
+              description:
+                "Kurzer Hinweis (1 Satz), warum/wie kompatibel, und worauf beim Wechsel zu achten " +
+                "ist (z.B. andere Abdeckrahmen-Grösse, andere Montagetiefe)."
+            }
+          },
+          required: ["hersteller", "produktlinie", "kompatibilitaetshinweis"]
+        }
       }
     },
     required: [
@@ -69,7 +96,8 @@ const RECORD_PRODUCT_TOOL: Anthropic.Tool = {
       "merkmale",
       "konfidenz",
       "unsicher",
-      "ersatzSuchkriterien"
+      "ersatzSuchkriterien",
+      "ersatzprodukte"
     ]
   }
 };
@@ -80,10 +108,15 @@ Steckdosen, Schalter, Sicherungsautomaten, FI/RCD-Schutzschalter, Kabel, Verteil
 Achte auf sichtbare Beschriftungen, Herstellerlogos, Farbcodes und Formfaktoren (z.B. Schweizer Typ-13-Steckdosen,
 Hager/ABB/Feller/Legrand/Gira-Designlinien). Wenn du dir nicht sicher bist, gib das ehrlich mit niedriger
 Konfidenz und unsicher=true an, anstatt Informationen zu erfinden. Erfinde insbesondere NIE eine
-konkrete Ersatzprodukt-Bezeichnung, Marke oder Artikelnummer eines anderen Produkts – dafür fehlt dir
-der Zugriff auf einen echten Produktkatalog. Gib stattdessen bei 'ersatzSuchkriterien' nur die
-technischen Such-/Filterkriterien an, mit denen der Installateur selbst beim Grossisten filtern kann.
-Antworte ausschliesslich über den Tool-Aufruf 'record_product' auf Deutsch.`;
+konkrete Artikelnummer, einen Preis oder eine Verfügbarkeitsaussage zu einem anderen Produkt – dafür
+fehlt dir der Zugriff auf einen echten Produktkatalog. Bei 'ersatzprodukte' darfst du basierend auf
+deinem allgemeinen Marktwissen bekannte Hersteller/Produktlinien nennen, die üblicherweise als
+kompatible Alternative gelten (z.B. welche Hersteller ähnliche Schweizer Steckdosen-Designlinien
+anbieten) – das ist erlaubt, solange es bei Hersteller/Produktlinien-Ebene bleibt und nie eine
+konkrete Artikelnummer, einen Preis oder eine Lagerverfügbarkeit vortäuscht. Gib zusätzlich bei
+'ersatzSuchkriterien' die technischen Such-/Filterkriterien an, mit denen der Installateur selbst
+beim Grossisten filtern kann. Antworte ausschliesslich über den Tool-Aufruf 'record_product' auf
+Deutsch.`;
 
 export async function recognizeProductFromImage(
   imageBase64: string,

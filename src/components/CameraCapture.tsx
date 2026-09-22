@@ -22,7 +22,6 @@ export function CameraCapture({ disabled, onCapture }: CameraCaptureProps) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleChange}
         disabled={disabled}
         hidden
@@ -33,7 +32,7 @@ export function CameraCapture({ disabled, onCapture }: CameraCaptureProps) {
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
       >
-        📷 Produkt fotografieren
+        📷 Foto aufnehmen oder auswählen
       </button>
     </div>
   );

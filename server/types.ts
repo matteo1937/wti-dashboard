@@ -9,6 +9,12 @@ export type ProductCategory =
   | "Leuchte"
   | "Sonstiges";
 
+export interface EmpfohlenesErsatzprodukt {
+  hersteller: string;
+  produktlinie: string;
+  kompatibilitaetshinweis: string;
+}
+
 export interface ProductRecognition {
   hersteller: string | null;
   produktname: string | null;
@@ -19,6 +25,7 @@ export interface ProductRecognition {
   konfidenz: "hoch" | "mittel" | "niedrig";
   unsicher: boolean;
   ersatzSuchkriterien: string;
+  ersatzprodukte: EmpfohlenesErsatzprodukt[];
 }
 
 export type RecognitionSource = "foto_ki" | "datenbank";
