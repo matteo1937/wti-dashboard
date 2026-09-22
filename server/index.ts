@@ -4,6 +4,7 @@ import express from "express";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isSupportedMediaType, recognizeProductFromImage } from "./claude";
+import { getSpendLimitUsd, getSpentUsd } from "./costGuard";
 import { findCatalogMatch, findProductByEan, saveProduct } from "./db";
 import type { ProductRecognition } from "./types";
 
@@ -19,7 +20,12 @@ function isValidEan(value: unknown): value is string {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY) });
+  res.json({
+    ok: true,
+    hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
+    spentUsd: Number(getSpentUsd().toFixed(2)),
+    spendLimitUsd: getSpendLimitUsd()
+  });
 });
 
 app.post("/api/recognize", async (req, res) => {

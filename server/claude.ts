@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { assertBudgetAvailable, recordUsage } from "./costGuard";
 import { PRODUCT_CATEGORIES, type ProductRecognition } from "./types";
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
@@ -93,6 +94,8 @@ export async function recognizeProductFromImage(
     throw new Error("ANTHROPIC_API_KEY ist nicht gesetzt. Siehe .env.example.");
   }
 
+  assertBudgetAvailable();
+
   const anthropic = new Anthropic({ apiKey });
 
   const message = await anthropic.messages.create({
@@ -117,6 +120,8 @@ export async function recognizeProductFromImage(
       }
     ]
   });
+
+  recordUsage(MODEL, message.usage.input_tokens, message.usage.output_tokens);
 
   const toolUse = message.content.find(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use" && block.name === "record_product"
