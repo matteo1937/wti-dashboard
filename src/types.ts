@@ -1,4 +1,4 @@
-export type RequestSource = "screenshot" | "phone" | "text";
+export type RequestSource = "screenshot" | "phone" | "text" | "public";
 export type VoteValue = "yes" | "no" | "unsure";
 export type RequestStatus = "open" | "confirmed" | "declined";
 
@@ -18,14 +18,15 @@ export interface BookingRequest {
   id: number;
   title: string;
   client: string | null;
+  contact: string | null;
   location: string | null;
   eventDate: string | null;
   eventTime: string | null;
   notes: string | null;
   source: RequestSource;
   imagePath: string | null;
-  createdBy: number;
-  createdByName: string;
+  createdBy: number | null;
+  createdByName: string | null;
   createdAt: string;
   updatedAt: string;
   status: RequestStatus;

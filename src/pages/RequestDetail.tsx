@@ -11,7 +11,8 @@ import type { BookingRequest, VoteValue } from "../types";
 const SOURCE_LABELS: Record<string, string> = {
   screenshot: "E-Mail-Screenshot",
   phone: "Telefonanruf",
-  text: "Direkteingabe"
+  text: "Direkteingabe",
+  public: "Website-Formular"
 };
 
 function formatDate(iso: string | null): string {
@@ -31,7 +32,15 @@ export default function RequestDetail() {
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ title: "", client: "", location: "", eventDate: "", eventTime: "", notes: "" });
+  const [form, setForm] = useState({
+    title: "",
+    client: "",
+    contact: "",
+    location: "",
+    eventDate: "",
+    eventTime: "",
+    notes: ""
+  });
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -41,6 +50,7 @@ export default function RequestDetail() {
       setForm({
         title: data.request.title,
         client: data.request.client ?? "",
+        contact: data.request.contact ?? "",
         location: data.request.location ?? "",
         eventDate: data.request.eventDate ?? "",
         eventTime: data.request.eventTime ?? "",
@@ -89,6 +99,7 @@ export default function RequestDetail() {
       const fd = new FormData();
       fd.set("title", form.title.trim());
       fd.set("client", form.client.trim());
+      fd.set("contact", form.contact.trim());
       fd.set("location", form.location.trim());
       fd.set("eventDate", form.eventDate);
       fd.set("eventTime", form.eventTime);
@@ -110,7 +121,7 @@ export default function RequestDetail() {
     try {
       await api.deleteRequest(requestId);
       await refresh();
-      navigate("/offene-anfragen", { replace: true });
+      navigate("/intern/offene-anfragen", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Löschen fehlgeschlagen.");
       setBusy(false);
@@ -129,15 +140,20 @@ export default function RequestDetail() {
 
       {!editing ? (
         <div className="card">
+          {request.source === "public" && (
+            <span className="status-pill status-external">🌐 Website-Anfrage</span>
+          )}
           <p className="card-meta">
             {formatDate(request.eventDate)}
             {request.eventTime ? ` · ${request.eventTime} Uhr` : ""}
           </p>
           {request.location && <p>📍 {request.location}</p>}
-          {request.client && <p>Auftraggeber: {request.client}</p>}
+          {request.client && <p>Von: {request.client}</p>}
+          {request.contact && <p>Kontakt: {request.contact}</p>}
           {request.notes && <p style={{ whiteSpace: "pre-wrap" }}>{request.notes}</p>}
           <p className="hint">
-            Quelle: {SOURCE_LABELS[request.source]} · erfasst von {request.createdByName}
+            Quelle: {SOURCE_LABELS[request.source]}
+            {request.createdByName ? ` · erfasst von ${request.createdByName}` : ""}
           </p>
           {request.imagePath && (
             <img src={request.imagePath} alt="Screenshot der Anfrage" className="upload-preview" />
@@ -169,6 +185,10 @@ export default function RequestDetail() {
           <div className="field">
             <label>Auftraggeber</label>
             <input value={form.client} onChange={(e) => setForm({ ...form, client: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Kontakt (Telefon/E-Mail)</label>
+            <input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} />
           </div>
           <div className="field">
             <label>Adresse / Ort</label>

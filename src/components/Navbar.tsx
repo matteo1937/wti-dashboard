@@ -24,14 +24,14 @@ export default function Navbar({ openRequests }: { openRequests: BookingRequest[
       </div>
       {member && (
         <div className="tabbar">
-          <NavLink to="/offene-anfragen" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
+          <NavLink to="/intern/offene-anfragen" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
             Offen
             {missingVoteCount > 0 && <span className="tab-badge">{missingVoteCount}</span>}
           </NavLink>
-          <NavLink to="/neue-anfrage" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
+          <NavLink to="/intern/neue-anfrage" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
             + Neue Anfrage
           </NavLink>
-          <NavLink to="/kalender" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
+          <NavLink to="/intern/kalender" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
             Kalender
           </NavLink>
         </div>

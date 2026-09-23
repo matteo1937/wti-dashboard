@@ -1,15 +1,23 @@
 # Tal-Echo — Auftrittsanfragen
 
 Web-App zur Verwaltung von Auftrittsanfragen für das Ländlertrio **Tal-Echo**
-(3 feste Mitglieder). Anfragen werden zentral erfasst, von allen drei
-Mitgliedern abgestimmt und bei einstimmigem Ja automatisch in den
-gemeinsamen Kalender übernommen.
+(3 feste Mitglieder). Die Startseite (`/`) ist ein öffentliches
+Anfrageformular für alle, die das Trio buchen möchten — kein Login nötig.
+Der interne Bereich (`/intern`) ist nur für die 3 Bandmitglieder: dort werden
+alle Anfragen (öffentlich eingegangene sowie per Telefon/E-Mail selbst
+erfasste) gemeinsam abgestimmt und bei einstimmigem Ja automatisch in den
+Kalender übernommen.
 
 ## Funktionen
 
-- **Anfrage erfassen** — Datum/Uhrzeit, Ort/Veranstaltung, Auftraggeber,
-  Notizen (Honorar, Dauer, Wünsche) und Quelle (E-Mail-Screenshot,
-  Telefonanruf, Direkteingabe).
+- **Öffentliches Anfrageformular** (`/`) — Interessierte können ohne Login
+  direkt eine Anfrage stellen (Name, Kontakt, Anlass, Datum, Nachricht).
+  Landet automatisch als offene Anfrage im internen Bereich. Geschützt durch
+  Rate-Limiting und ein Honeypot-Feld gegen Spam.
+- **Interner Bereich** (`/intern`, Login mit Name + Zugangscode) —
+  Anfrage erfassen: Datum/Uhrzeit, Ort/Veranstaltung, Auftraggeber, Kontakt,
+  Notizen (Honorar, Dauer, Wünsche) und Quelle (Website-Formular,
+  E-Mail-Screenshot, Telefonanruf, Direkteingabe).
 - **Automatische Datumserkennung aus Screenshots** — Beim Hochladen eines
   Fotos/Screenshots einer E-Mail extrahiert die App per OCR (Tesseract.js,
   läuft im Browser) automatisch Datum, Uhrzeit, Ort und Absender als
@@ -35,7 +43,8 @@ src/                       React + Vite Frontend (PWA, mobile-first)
     ocr.ts                   Tesseract.js-Aufruf + Heuristiken (Datum/Zeit/
                               Ort/Absender aus E-Mail-Text erkennen)
   pages/
-    Login.tsx                Profil wählen + gemeinsamer Zugangscode
+    PublicBookingForm.tsx    Öffentliches Anfrageformular auf "/", kein Login
+    Login.tsx                "/intern/login" — Profil wählen + Zugangscode
     OpenRequests.tsx          Offene Anfragen, getrennt nach "wartet auf
                               dich" / "wartet auf die anderen"
     NewRequest.tsx            Anfrage erfassen inkl. Foto-Upload + OCR
@@ -46,7 +55,9 @@ server/                     Node/Express Backend
   db.ts                      SQLite (node:sqlite) — members, requests, votes
   auth.ts                    Login per Name + gemeinsamem Zugangscode,
                               Sitzung als signiertes JWT-Cookie
-  index.ts                   Express-Routen (Auth, Requests, Votes, Uploads)
+  index.ts                   Express-Routen: öffentliches Anfrageformular
+                              (rate-limited, ohne Login), Auth, Requests,
+                              Votes, Uploads (Login erforderlich)
 ```
 
 Die SQLite-Datenbank (`data/trio.db`) und hochgeladene Screenshots

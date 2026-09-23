@@ -2,6 +2,7 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import { rateLimit } from "express-rate-limit";
 import multer from "multer";
 import { mkdirSync } from "node:fs";
 import { dirname, extname, join } from "node:path";
@@ -52,13 +53,25 @@ app.use(express.json({ limit: "2mb" }));
 app.use(cookieParser());
 app.use("/uploads", express.static(uploadsDir));
 
-const VALID_SOURCES: RequestSource[] = ["screenshot", "phone", "text"];
+const VALID_SOURCES: RequestSource[] = ["screenshot", "phone", "text", "public"];
 const VALID_VOTES: VoteValue[] = ["yes", "no", "unsure"];
 const VALID_STATUSES: RequestStatus[] = ["open", "confirmed", "declined"];
+const MAX_TEXT_LENGTH = 200;
+const MAX_NOTES_LENGTH = 4000;
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
+
+// Schützt das öffentliche Anfrageformular vor Spam/Missbrauch: max. 8
+// Einsendungen pro IP und Stunde.
+const publicRequestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Anfragen von dieser Adresse. Bitte später erneut versuchen." }
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, members: getMembers().length });
@@ -68,6 +81,51 @@ app.get("/api/health", (_req, res) => {
 // Gibt bewusst nur die Vornamen zurück, keine sensiblen Daten.
 app.get("/api/public/members", (_req, res) => {
   res.json({ members: getMembers() });
+});
+
+// Öffentliches Anfrageformular: jede und jeder im Internet kann uns hierüber
+// für einen Auftritt anfragen, ganz ohne Login. Landet als offene Anfrage
+// im internen Bereich, wo wir sie sehen und abstimmen.
+app.post("/api/public/requests", publicRequestLimiter, (req, res) => {
+  const body = req.body as Record<string, string | undefined>;
+
+  // Honeypot-Feld: für Menschen unsichtbar, Bots füllen es oft trotzdem aus.
+  if (isNonEmptyString(body.website)) {
+    res.status(201).json({ ok: true });
+    return;
+  }
+
+  if (!isNonEmptyString(body.title) || body.title.trim().length > MAX_TEXT_LENGTH) {
+    res.status(400).json({ error: "Bitte kurz angeben, worum es geht." });
+    return;
+  }
+  if (!isNonEmptyString(body.client) || body.client.trim().length > MAX_TEXT_LENGTH) {
+    res.status(400).json({ error: "Bitte Namen angeben." });
+    return;
+  }
+  if (!isNonEmptyString(body.contact) || body.contact.trim().length > MAX_TEXT_LENGTH) {
+    res.status(400).json({ error: "Bitte Telefonnummer oder E-Mail angeben, damit wir antworten können." });
+    return;
+  }
+  if (body.notes && body.notes.length > MAX_NOTES_LENGTH) {
+    res.status(400).json({ error: "Nachricht ist zu lang." });
+    return;
+  }
+
+  const input: NewRequestInput = {
+    title: body.title.trim(),
+    client: body.client.trim(),
+    contact: body.contact.trim(),
+    location: body.location?.trim().slice(0, MAX_TEXT_LENGTH) || null,
+    eventDate: body.eventDate?.trim() || null,
+    eventTime: body.eventTime?.trim() || null,
+    notes: body.notes?.trim() || null,
+    source: "public",
+    createdBy: null
+  };
+
+  createRequest(input);
+  res.status(201).json({ ok: true });
 });
 
 // --- Auth ---
@@ -146,6 +204,7 @@ app.post("/api/requests", requireAuth, upload.single("image"), (req: AuthedReque
   const input: NewRequestInput = {
     title: body.title.trim(),
     client: body.client?.trim() || null,
+    contact: body.contact?.trim() || null,
     location: body.location?.trim() || null,
     eventDate: body.eventDate?.trim() || null,
     eventTime: body.eventTime?.trim() || null,
@@ -176,6 +235,7 @@ app.patch("/api/requests/:id", requireAuth, upload.single("image"), (req: Authed
   const input: UpdateRequestInput = {
     title: body.title?.trim(),
     client: body.client !== undefined ? body.client.trim() || null : undefined,
+    contact: body.contact !== undefined ? body.contact.trim() || null : undefined,
     location: body.location !== undefined ? body.location.trim() || null : undefined,
     eventDate: body.eventDate !== undefined ? body.eventDate.trim() || null : undefined,
     eventTime: body.eventTime !== undefined ? body.eventTime.trim() || null : undefined,

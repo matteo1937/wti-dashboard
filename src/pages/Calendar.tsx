@@ -120,7 +120,7 @@ export default function Calendar() {
                       key={ev.id}
                       className="calendar-event-dot"
                       style={{ border: "none", cursor: "pointer" }}
-                      onClick={() => navigate(`/anfragen/${ev.id}`)}
+                      onClick={() => navigate(`/intern/anfragen/${ev.id}`)}
                       title={ev.title}
                     >
                       {ev.title}

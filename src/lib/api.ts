@@ -43,6 +43,21 @@ export async function getPublicMembers(): Promise<{ members: Member[] }> {
   return request("/public/members");
 }
 
+export interface PublicRequestInput {
+  title: string;
+  client: string;
+  contact: string;
+  location?: string;
+  eventDate?: string;
+  eventTime?: string;
+  notes?: string;
+  website?: string; // Honeypot, muss leer bleiben
+}
+
+export async function submitPublicRequest(input: PublicRequestInput): Promise<{ ok: true }> {
+  return request("/public/requests", { method: "POST", body: JSON.stringify(input) });
+}
+
 export async function listRequests(status?: RequestStatus): Promise<{ requests: BookingRequest[] }> {
   const query = status ? `?status=${status}` : "";
   return request(`/requests${query}`);

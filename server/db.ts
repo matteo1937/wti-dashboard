@@ -28,13 +28,14 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     client TEXT,
+    contact TEXT,
     location TEXT,
     event_date TEXT,
     event_time TEXT,
     notes TEXT,
-    source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text')),
+    source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text','public')),
     image_path TEXT,
-    created_by INTEGER NOT NULL REFERENCES members(id),
+    created_by INTEGER REFERENCES members(id),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','confirmed','declined'))
@@ -53,6 +54,47 @@ db.exec(`
     value TEXT NOT NULL
   );
 `);
+
+// Migration für Datenbanken, die vor der öffentlichen Anfrage-Funktion
+// angelegt wurden: created_by war NOT NULL und es gab noch keine contact-
+// Spalte bzw. keinen 'public'-Quellentyp. SQLite kann Spalten-Constraints
+// nicht per ALTER TABLE ändern, daher wird die Tabelle bei Bedarf einmalig
+// neu angelegt und alle bestehenden Zeilen unverändert übernommen.
+function migrateRequestsTable() {
+  const columns = db.prepare("PRAGMA table_info(requests)").all() as {
+    name: string;
+    notnull: number;
+  }[];
+  const hasContact = columns.some((c) => c.name === "contact");
+  const createdByNotNull = columns.find((c) => c.name === "created_by")?.notnull === 1;
+  if (!hasContact || createdByNotNull) {
+    db.exec(`
+      CREATE TABLE requests_migrated (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        client TEXT,
+        contact TEXT,
+        location TEXT,
+        event_date TEXT,
+        event_time TEXT,
+        notes TEXT,
+        source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text','public')),
+        image_path TEXT,
+        created_by INTEGER REFERENCES members(id),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','confirmed','declined'))
+      );
+      INSERT INTO requests_migrated
+        (id, title, client, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status)
+        SELECT id, title, client, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status
+        FROM requests;
+      DROP TABLE requests;
+      ALTER TABLE requests_migrated RENAME TO requests;
+    `);
+  }
+}
+migrateRequestsTable();
 
 // Einmaliger, sicherer Reset-Mechanismus: wird nur ausgeführt, wenn
 // RESET_ALL_DATA_TOKEN gesetzt ist UND sich vom zuletzt angewendeten Token
@@ -144,14 +186,15 @@ interface RequestRow {
   id: number;
   title: string;
   client: string | null;
+  contact: string | null;
   location: string | null;
   event_date: string | null;
   event_time: string | null;
   notes: string | null;
   source: BookingRequest["source"];
   image_path: string | null;
-  created_by: number;
-  created_by_name: string;
+  created_by: number | null;
+  created_by_name: string | null;
   created_at: string;
   updated_at: string;
   status: RequestStatus;
@@ -180,6 +223,7 @@ function rowToRequest(row: RequestRow): BookingRequest {
     id: row.id,
     title: row.title,
     client: row.client,
+    contact: row.contact,
     location: row.location,
     eventDate: row.event_date,
     eventTime: row.event_time,
@@ -196,11 +240,11 @@ function rowToRequest(row: RequestRow): BookingRequest {
 }
 
 const REQUEST_SELECT = `
-  SELECT r.id, r.title, r.client, r.location, r.event_date, r.event_time, r.notes,
+  SELECT r.id, r.title, r.client, r.contact, r.location, r.event_date, r.event_time, r.notes,
          r.source, r.image_path, r.created_by, m.name AS created_by_name,
          r.created_at, r.updated_at, r.status
   FROM requests r
-  JOIN members m ON m.id = r.created_by
+  LEFT JOIN members m ON m.id = r.created_by
 `;
 
 export function listRequests(status?: RequestStatus): BookingRequest[] {
@@ -222,12 +266,13 @@ export function createRequest(input: NewRequestInput): BookingRequest {
   const result = db
     .prepare(
       `INSERT INTO requests
-        (title, client, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`
+        (title, client, contact, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`
     )
     .run(
       input.title,
       input.client ?? null,
+      input.contact ?? null,
       input.location ?? null,
       input.eventDate ?? null,
       input.eventTime ?? null,
@@ -249,12 +294,13 @@ export function updateRequest(id: number, input: UpdateRequestInput): BookingReq
   const now = new Date().toISOString();
   db.prepare(
     `UPDATE requests SET
-       title = ?, client = ?, location = ?, event_date = ?, event_time = ?,
+       title = ?, client = ?, contact = ?, location = ?, event_date = ?, event_time = ?,
        notes = ?, source = ?, image_path = ?, updated_at = ?
      WHERE id = ?`
   ).run(
     input.title ?? existing.title,
     input.client !== undefined ? input.client : existing.client,
+    input.contact !== undefined ? input.contact : existing.contact,
     input.location !== undefined ? input.location : existing.location,
     input.eventDate !== undefined ? input.eventDate : existing.eventDate,
     input.eventTime !== undefined ? input.eventTime : existing.eventTime,
