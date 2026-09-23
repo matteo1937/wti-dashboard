@@ -7,6 +7,7 @@ import Calendar from "./pages/Calendar";
 import Login from "./pages/Login";
 import NewRequest from "./pages/NewRequest";
 import OpenRequests from "./pages/OpenRequests";
+import PublicBookingForm from "./pages/PublicBookingForm";
 import RequestDetail from "./pages/RequestDetail";
 
 function Shell() {
@@ -18,29 +19,35 @@ function Shell() {
       <Navbar openRequests={openRequests} />
       <div className="main-content">
         <Routes>
-          <Route path="/offene-anfragen" element={<OpenRequests />} />
-          <Route path="/neue-anfrage" element={<NewRequest />} />
-          <Route path="/anfragen/:id" element={<RequestDetail />} />
-          <Route path="/kalender" element={<Calendar />} />
-          <Route path="*" element={<Navigate to="/offene-anfragen" replace />} />
+          <Route path="offene-anfragen" element={<OpenRequests />} />
+          <Route path="neue-anfrage" element={<NewRequest />} />
+          <Route path="anfragen/:id" element={<RequestDetail />} />
+          <Route path="kalender" element={<Calendar />} />
+          <Route path="*" element={<Navigate to="/intern/offene-anfragen" replace />} />
         </Routes>
       </div>
     </div>
   );
 }
 
-export default function App() {
+function InternLogin() {
   const { member, loading } = useAuth();
-
   if (loading) {
     return <div className="main-content">Lade …</div>;
   }
+  if (member) {
+    return <Navigate to="/intern/offene-anfragen" replace />;
+  }
+  return <Login />;
+}
 
+export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={member ? <Navigate to="/offene-anfragen" replace /> : <Login />} />
+      <Route path="/" element={<PublicBookingForm />} />
+      <Route path="/intern/login" element={<InternLogin />} />
       <Route
-        path="/*"
+        path="/intern/*"
         element={
           <ProtectedRoute>
             <RequestsProvider>
@@ -49,6 +56,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -311,6 +311,12 @@ textarea {
   color: #fff;
 }
 
+.status-external {
+  background: var(--color-bg-alt);
+  color: var(--color-wood-dark);
+  margin-bottom: 8px;
+}
+
 /* --- Vote buttons --- */
 
 .vote-row {

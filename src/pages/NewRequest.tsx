@@ -18,6 +18,7 @@ export default function NewRequest() {
   const [source, setSource] = useState<RequestSource>("text");
   const [title, setTitle] = useState("");
   const [client, setClient] = useState("");
+  const [contact, setContact] = useState("");
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
@@ -76,6 +77,7 @@ export default function NewRequest() {
       const formData = new FormData();
       formData.set("title", title.trim());
       formData.set("client", client.trim());
+      formData.set("contact", contact.trim());
       formData.set("location", location.trim());
       formData.set("eventDate", eventDate);
       formData.set("eventTime", eventTime);
@@ -85,7 +87,7 @@ export default function NewRequest() {
 
       const { request } = await createRequest(formData);
       await refresh();
-      navigate(`/anfragen/${request.id}`, { replace: true });
+      navigate(`/intern/anfragen/${request.id}`, { replace: true });
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : "Speichern fehlgeschlagen.");
     } finally {
@@ -155,6 +157,16 @@ export default function NewRequest() {
             value={client}
             onChange={(e) => setClient(e.target.value)}
             placeholder="z.B. Frau Müller / Wirtin"
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="contact">Kontakt (Telefon/E-Mail)</label>
+          <input
+            id="contact"
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+            placeholder="Für Rückfragen"
           />
         </div>
 

@@ -31,7 +31,7 @@ export default function Login() {
     setError(null);
     try {
       await login(selected.name, passcode);
-      navigate("/offene-anfragen", { replace: true });
+      navigate("/intern/offene-anfragen", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
@@ -44,7 +44,7 @@ export default function Login() {
       <form className="login-card" onSubmit={handleSubmit}>
         <div className="login-logo">🏔️</div>
         <h1>Tal-Echo</h1>
-        <p className="hint">Auftrittsanfragen für unser Ländlertrio</p>
+        <p className="hint">Interner Bereich für die Band</p>
 
         {error && <div className="error-box">{error}</div>}
 

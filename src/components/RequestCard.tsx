@@ -24,7 +24,7 @@ export default function RequestCard({
   const missingMyVote = highlightMissingVote && !myVote;
 
   return (
-    <Link to={`/anfragen/${request.id}`} className="card" style={{ display: "block", textDecoration: "none" }}>
+    <Link to={`/intern/anfragen/${request.id}`} className="card" style={{ display: "block", textDecoration: "none" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div>
           <p className="card-title">{request.title}</p>
@@ -39,8 +39,9 @@ export default function RequestCard({
           <StatusBadge status={request.status} />
         )}
       </div>
+      {request.source === "public" && <span className="status-pill status-external">🌐 Website-Anfrage</span>}
       {request.location && <p className="card-meta">📍 {request.location}</p>}
-      {request.client && <p className="card-meta">Auftraggeber: {request.client}</p>}
+      {request.client && <p className="card-meta">Von: {request.client}</p>}
       <div className="member-votes">
         {request.votes.map((v) => (
           <div className="member-vote-item" key={v.memberId}>

@@ -9,7 +9,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <div className="main-content">Lade …</div>;
   }
   if (!member) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/intern/login" replace />;
   }
   return <>{children}</>;
 }
