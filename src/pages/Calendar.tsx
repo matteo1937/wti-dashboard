@@ -1,9 +1,56 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRequests } from "../context/RequestsContext";
 import RequestCard from "../components/RequestCard";
 import { useAuth } from "../context/AuthContext";
+import { getCalendarToken } from "../lib/api";
 import type { BookingRequest } from "../types";
+
+function CalendarSubscribe() {
+  const [token, setToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    getCalendarToken()
+      .then((data) => setToken(data.token))
+      .catch(() => setToken(null));
+  }, []);
+
+  if (!token) return null;
+
+  const httpsUrl = `${window.location.origin}/api/calendar/feed.ics?token=${token}`;
+  const webcalUrl = httpsUrl.replace(/^https?:\/\//, "webcal://");
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(httpsUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Zwischenablage evtl. nicht verfügbar (z.B. kein HTTPS) - kein Problem,
+      // die URL steht ja sichtbar im Feld.
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginBottom: 16 }}>
+      <h2 style={{ marginTop: 0 }}>Kalender abonnieren</h2>
+      <p className="hint">
+        Abonniere diesen Link in Google/Apple/Outlook-Kalender, dann erscheinen bestätigte Termine
+        automatisch auch in deinem persönlichen Kalender.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <a href={webcalUrl} className="btn btn-primary btn-sm">
+          Direkt abonnieren
+        </a>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={handleCopy}>
+          {copied ? "Kopiert ✓" : "Link kopieren"}
+        </button>
+      </div>
+      <input readOnly value={httpsUrl} onFocus={(e) => e.target.select()} style={{ marginTop: 8 }} />
+    </div>
+  );
+}
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -65,6 +112,8 @@ export default function Calendar() {
   return (
     <div>
       <h1>Kalender</h1>
+
+      <CalendarSubscribe />
 
       <div className="view-toggle">
         <button

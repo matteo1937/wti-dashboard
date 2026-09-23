@@ -39,6 +39,10 @@ export async function getMembers(): Promise<{ members: Member[] }> {
   return request("/members");
 }
 
+export async function getCalendarToken(): Promise<{ token: string }> {
+  return request("/calendar/token");
+}
+
 export async function getPublicMembers(): Promise<{ members: Member[] }> {
   return request("/public/members");
 }

@@ -12,6 +12,7 @@ import type { AuthedRequest } from "./auth";
 import {
   createRequest,
   deleteRequest,
+  getCalendarToken,
   getMemberByName,
   getMembers,
   getRequestById,
@@ -20,6 +21,7 @@ import {
   setVote,
   updateRequest
 } from "./db";
+import { buildIcs } from "./ical";
 import type { NewRequestInput, RequestSource, RequestStatus, UpdateRequestInput, VoteValue } from "./types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -292,6 +294,30 @@ app.post("/api/requests/:id/status", requireAuth, (req, res) => {
   }
   const request = setRequestStatus(id, status);
   res.json({ request });
+});
+
+// --- Kalender-Export (iCal) ---
+
+// Liefert das geheime Abo-Token an eingeloggte Mitglieder, damit sie sich
+// selbst die Abo-URL für ihren Kalender (Google/Apple/Outlook) zusammenbauen
+// können.
+app.get("/api/calendar/token", requireAuth, (_req, res) => {
+  res.json({ token: getCalendarToken() });
+});
+
+// Öffentlich erreichbar (Kalender-Apps können sich nicht per Cookie
+// anmelden), aber durch das unerratbare Token geschützt. Liefert alle
+// bestätigten Termine als .ics-Feed zum Abonnieren.
+app.get("/api/calendar/feed.ics", (req, res) => {
+  const token = req.query.token;
+  if (typeof token !== "string" || token !== getCalendarToken()) {
+    res.status(404).end();
+    return;
+  }
+  const confirmed = listRequests("confirmed");
+  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("Content-Disposition", 'inline; filename="tal-echo.ics"');
+  res.send(buildIcs(confirmed));
 });
 
 // Fehlerbehandlung für multer (z.B. zu grosse Datei / falscher Typ)
