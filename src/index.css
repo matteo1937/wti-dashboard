@@ -426,6 +426,91 @@ textarea {
   margin-bottom: 4px;
 }
 
+/* --- Öffentliche Startseite / Hero --- */
+
+.public-landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 48vh;
+  min-height: 300px;
+  max-height: 520px;
+  overflow: hidden;
+  background: var(--color-wood-dark);
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 14, 8, 0.05) 0%,
+    rgba(20, 14, 8, 0.35) 60%,
+    var(--color-bg) 100%
+  );
+}
+
+.hero-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.hero-content h1 {
+  color: #fff;
+  font-size: 2.6rem;
+  margin: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+
+.hero-content p {
+  color: #fdf6e8;
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+}
+
+.public-body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 8px 16px 60px;
+  margin-top: -12px;
+}
+
+.public-card {
+  width: 100%;
+  max-width: 520px;
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: 38vh;
+    min-height: 240px;
+  }
+
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+}
+
 .member-picker {
   display: flex;
   flex-direction: column;
