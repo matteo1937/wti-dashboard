@@ -1,7 +1,16 @@
 export default function Hero() {
   return (
     <section className="pub-hero">
-      <img src="/images/band-hero.jpg" alt="Tal-Echo in den Nidwaldner Bergen" className="pub-hero-image" />
+      <img
+        src="/images/band-hero-850.jpg"
+        srcSet="/images/band-hero-500.jpg 500w, /images/band-hero-850.jpg 850w"
+        sizes="100vw"
+        width={850}
+        height={770}
+        fetchPriority="high"
+        alt="Tal-Echo in den Nidwaldner Bergen"
+        className="pub-hero-image"
+      />
       <div className="pub-hero-overlay" />
       <div className="pub-hero-content">
         <p className="pub-hero-eyebrow">Ländlerformation aus Nidwalden</p>

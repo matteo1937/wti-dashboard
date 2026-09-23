@@ -55,6 +55,13 @@ db.exec(`
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS page_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL,
+    referrer TEXT,
+    created_at TEXT NOT NULL
+  );
 `);
 
 // Migration für Datenbanken, die vor der öffentlichen Anfrage-Funktion
@@ -384,4 +391,37 @@ export function setRequestStatus(id: number, status: RequestStatus): BookingRequ
 
 export function deleteRequest(id: number): void {
   db.prepare("DELETE FROM requests WHERE id = ?").run(id);
+}
+
+// --- Statistik (datenschutzfreundlich: keine IP, keine Cookies, keine
+// personenbezogenen Daten - nur Pfad, Referrer und Zeitpunkt) ---
+
+export function recordPageView(path: string, referrer: string | null): void {
+  db.prepare("INSERT INTO page_views (path, referrer, created_at) VALUES (?, ?, ?)").run(
+    path,
+    referrer,
+    new Date().toISOString()
+  );
+}
+
+export interface SiteStats {
+  totalViews: number;
+  views30d: number;
+  totalRequests: number;
+  requests30d: number;
+}
+
+export function getStats(): SiteStats {
+  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { c: totalViews } = db.prepare("SELECT COUNT(*) AS c FROM page_views").get() as { c: number };
+  const { c: views30d } = db
+    .prepare("SELECT COUNT(*) AS c FROM page_views WHERE created_at >= ?")
+    .get(since30d) as { c: number };
+  const { c: totalRequests } = db.prepare("SELECT COUNT(*) AS c FROM requests").get() as { c: number };
+  const { c: requests30d } = db
+    .prepare("SELECT COUNT(*) AS c FROM requests WHERE created_at >= ?")
+    .get(since30d) as { c: number };
+
+  return { totalViews, views30d, totalRequests, requests30d };
 }

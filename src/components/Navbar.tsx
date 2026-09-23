@@ -34,6 +34,9 @@ export default function Navbar({ openRequests }: { openRequests: BookingRequest[
           <NavLink to="/intern/kalender" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
             Kalender
           </NavLink>
+          <NavLink to="/intern/statistik" className={({ isActive }) => `tab-link${isActive ? " active" : ""}`}>
+            Statistik
+          </NavLink>
         </div>
       )}
     </>

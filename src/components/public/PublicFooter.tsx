@@ -15,8 +15,15 @@ export default function PublicFooter() {
           <SpotifyIcon />
         </a>
       </div>
+      <p className="pub-footer-contact">
+        <a href="tel:+41774528882">077 452 88 82</a>
+        <span aria-hidden="true"> · </span>
+        <a href="mailto:tal-echo@hotmail.com">tal-echo@hotmail.com</a>
+      </p>
       <p className="pub-footer-text">© {new Date().getFullYear()} Tal-Echo — Ländlerformation aus Nidwalden</p>
       <p className="pub-footer-links">
+        <Link to="/datenschutz">Datenschutz</Link>
+        <span aria-hidden="true"> · </span>
         <Link to="/intern/login">Für Bandmitglieder</Link>
       </p>
     </footer>

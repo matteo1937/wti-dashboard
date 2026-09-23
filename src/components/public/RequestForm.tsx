@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ApiError, submitPublicRequest } from "../../lib/api";
 import Reveal from "./Reveal";
 import { CheckCircleIcon } from "./icons";
@@ -13,6 +14,7 @@ export default function RequestForm() {
   const [eventEndTime, setEventEndTime] = useState("");
   const [notes, setNotes] = useState("");
   const [website, setWebsite] = useState(""); // Honeypot
+  const [showMore, setShowMore] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,7 @@ export default function RequestForm() {
     setEventTime("");
     setEventEndTime("");
     setNotes("");
+    setShowMore(false);
     setDone(false);
   }
 
@@ -67,6 +70,10 @@ export default function RequestForm() {
           <p className="pub-lede">
             Ihr plant eine Hochzeit, ein Vereinsfest oder eine andere Feier und sucht musikalische
             Unterhaltung? Schickt uns hier eure Anfrage — wir melden uns so schnell wie möglich.
+          </p>
+          <p className="pub-lede-contact">
+            Lieber direkt reden? Ruf uns an: <a href="tel:+41774528882">077 452 88 82</a> oder schreib
+            eine Mail an <a href="mailto:tal-echo@hotmail.com">tal-echo@hotmail.com</a>.
           </p>
         </Reveal>
 
@@ -134,46 +141,58 @@ export default function RequestForm() {
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="location">Ort der Veranstaltung</label>
-                <input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="z.B. 3800 Interlaken, Gasthaus Rössli"
-                />
-              </div>
+              {!showMore ? (
+                <button
+                  type="button"
+                  className="pub-btn pub-btn-outline pub-btn-block"
+                  onClick={() => setShowMore(true)}
+                >
+                  + Ort, Datum &amp; Uhrzeit angeben (optional)
+                </button>
+              ) : (
+                <>
+                  <div className="field">
+                    <label htmlFor="location">Ort der Veranstaltung</label>
+                    <input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="z.B. 3800 Interlaken, Gasthaus Rössli"
+                    />
+                  </div>
 
-              <div className="field">
-                <label htmlFor="eventDate">Datum (falls bekannt)</label>
-                <input
-                  id="eventDate"
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                />
-              </div>
+                  <div className="field">
+                    <label htmlFor="eventDate">Datum (falls bekannt)</label>
+                    <input
+                      id="eventDate"
+                      type="date"
+                      value={eventDate}
+                      onChange={(e) => setEventDate(e.target.value)}
+                    />
+                  </div>
 
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="eventTime">Von</label>
-                  <input
-                    id="eventTime"
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => setEventTime(e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="eventEndTime">Bis</label>
-                  <input
-                    id="eventEndTime"
-                    type="time"
-                    value={eventEndTime}
-                    onChange={(e) => setEventEndTime(e.target.value)}
-                  />
-                </div>
-              </div>
+                  <div className="field-row">
+                    <div className="field">
+                      <label htmlFor="eventTime">Von</label>
+                      <input
+                        id="eventTime"
+                        type="time"
+                        value={eventTime}
+                        onChange={(e) => setEventTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="eventEndTime">Bis</label>
+                      <input
+                        id="eventEndTime"
+                        type="time"
+                        value={eventEndTime}
+                        onChange={(e) => setEventEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="field">
                 <label htmlFor="notes">Nachricht</label>
@@ -184,6 +203,12 @@ export default function RequestForm() {
                   placeholder="Erzähl uns kurz mehr - Dauer, Anzahl Gäste, besondere Wünsche …"
                 />
               </div>
+
+              <p className="pub-privacy-notice">
+                Mit dem Absenden bist du einverstanden, dass wir deine Angaben zur Bearbeitung dieser
+                Anfrage speichern und dich kontaktieren. Mehr dazu in unserer{" "}
+                <Link to="/datenschutz">Datenschutzerklärung</Link>.
+              </p>
 
               <button type="submit" className="pub-btn pub-btn-primary pub-btn-block" disabled={submitting}>
                 {submitting ? "Wird gesendet …" : "Anfrage senden"}

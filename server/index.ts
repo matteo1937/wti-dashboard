@@ -16,7 +16,9 @@ import {
   getMemberByName,
   getMembers,
   getRequestById,
+  getStats,
   listRequests,
+  recordPageView,
   setRequestStatus,
   setVote,
   updateRequest
@@ -74,6 +76,18 @@ const publicRequestLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen von dieser Adresse. Bitte später erneut versuchen." }
 });
+
+// Grosszügiger als das Anfrageformular, da normale Seitenaufrufe (nicht nur
+// Formular-Einsendungen) gezählt werden.
+const pageViewLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Anfragen." }
+});
+
+const MAX_PATH_LENGTH = 200;
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, members: getMembers().length });
@@ -294,6 +308,24 @@ app.post("/api/requests/:id/status", requireAuth, (req, res) => {
   }
   const request = setRequestStatus(id, status);
   res.json({ request });
+});
+
+// --- Statistik ---
+
+// Datenschutzfreundliches, eigenes Seitenaufruf-Tracking ohne Cookies oder
+// IP-Speicherung: nur Pfad, Referrer (Domain, kein voller Query-String) und
+// Zeitpunkt. Dient ausschliesslich der internen Auswertung (Besuche/
+// Conversion-Rate), keine Weitergabe an Dritte.
+app.post("/api/public/track", pageViewLimiter, (req, res) => {
+  const body = req.body as Record<string, string | undefined>;
+  const path = isNonEmptyString(body.path) ? body.path.trim().slice(0, MAX_PATH_LENGTH) : "/";
+  const referrer = isNonEmptyString(body.referrer) ? body.referrer.trim().slice(0, MAX_PATH_LENGTH) : null;
+  recordPageView(path, referrer);
+  res.status(204).end();
+});
+
+app.get("/api/stats", requireAuth, (_req, res) => {
+  res.json(getStats());
 });
 
 // --- Kalender-Export (iCal) ---

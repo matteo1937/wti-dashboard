@@ -7,8 +7,10 @@ import Calendar from "./pages/Calendar";
 import Login from "./pages/Login";
 import NewRequest from "./pages/NewRequest";
 import OpenRequests from "./pages/OpenRequests";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PublicBookingForm from "./pages/PublicBookingForm";
 import RequestDetail from "./pages/RequestDetail";
+import Stats from "./pages/Stats";
 
 function Shell() {
   const { requests } = useRequests();
@@ -23,6 +25,7 @@ function Shell() {
           <Route path="neue-anfrage" element={<NewRequest />} />
           <Route path="anfragen/:id" element={<RequestDetail />} />
           <Route path="kalender" element={<Calendar />} />
+          <Route path="statistik" element={<Stats />} />
           <Route path="*" element={<Navigate to="/intern/offene-anfragen" replace />} />
         </Routes>
       </div>
@@ -45,6 +48,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<PublicBookingForm />} />
+      <Route path="/datenschutz" element={<PrivacyPolicy />} />
       <Route path="/intern/login" element={<InternLogin />} />
       <Route
         path="/intern/*"

@@ -1,11 +1,17 @@
+import { useEffect } from "react";
 import About from "../components/public/About";
 import Hero from "../components/public/Hero";
 import Lineup from "../components/public/Lineup";
 import Listen from "../components/public/Listen";
 import PublicFooter from "../components/public/PublicFooter";
 import RequestForm from "../components/public/RequestForm";
+import { trackPageView } from "../lib/api";
 
 export default function PublicBookingForm() {
+  useEffect(() => {
+    trackPageView("/");
+  }, []);
+
   return (
     <div className="public-landing">
       <Hero />
