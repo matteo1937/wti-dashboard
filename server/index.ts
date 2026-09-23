@@ -119,6 +119,7 @@ app.post("/api/public/requests", publicRequestLimiter, (req, res) => {
     location: body.location?.trim().slice(0, MAX_TEXT_LENGTH) || null,
     eventDate: body.eventDate?.trim() || null,
     eventTime: body.eventTime?.trim() || null,
+    eventEndTime: body.eventEndTime?.trim() || null,
     notes: body.notes?.trim() || null,
     source: "public",
     createdBy: null
@@ -208,6 +209,7 @@ app.post("/api/requests", requireAuth, upload.single("image"), (req: AuthedReque
     location: body.location?.trim() || null,
     eventDate: body.eventDate?.trim() || null,
     eventTime: body.eventTime?.trim() || null,
+    eventEndTime: body.eventEndTime?.trim() || null,
     notes: body.notes?.trim() || null,
     source,
     imagePath: req.file ? `/uploads/${req.file.filename}` : null,
@@ -239,6 +241,7 @@ app.patch("/api/requests/:id", requireAuth, upload.single("image"), (req: Authed
     location: body.location !== undefined ? body.location.trim() || null : undefined,
     eventDate: body.eventDate !== undefined ? body.eventDate.trim() || null : undefined,
     eventTime: body.eventTime !== undefined ? body.eventTime.trim() || null : undefined,
+    eventEndTime: body.eventEndTime !== undefined ? body.eventEndTime.trim() || null : undefined,
     notes: body.notes !== undefined ? body.notes.trim() || null : undefined,
     source: body.source as RequestSource | undefined,
     imagePath: req.file ? `/uploads/${req.file.filename}` : undefined

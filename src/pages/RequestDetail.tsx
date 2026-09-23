@@ -6,6 +6,7 @@ import * as api from "../lib/api";
 import { ApiError } from "../lib/api";
 import StatusBadge from "../components/StatusBadge";
 import VoteButtons from "../components/VoteButtons";
+import { formatTimeRange } from "../lib/format";
 import type { BookingRequest, VoteValue } from "../types";
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ export default function RequestDetail() {
     location: "",
     eventDate: "",
     eventTime: "",
+    eventEndTime: "",
     notes: ""
   });
   const [busy, setBusy] = useState(false);
@@ -54,6 +56,7 @@ export default function RequestDetail() {
         location: data.request.location ?? "",
         eventDate: data.request.eventDate ?? "",
         eventTime: data.request.eventTime ?? "",
+        eventEndTime: data.request.eventEndTime ?? "",
         notes: data.request.notes ?? ""
       });
     } catch (err) {
@@ -103,6 +106,7 @@ export default function RequestDetail() {
       fd.set("location", form.location.trim());
       fd.set("eventDate", form.eventDate);
       fd.set("eventTime", form.eventTime);
+      fd.set("eventEndTime", form.eventEndTime);
       fd.set("notes", form.notes.trim());
       const data = await api.updateRequest(requestId, fd);
       setRequest(data.request);
@@ -145,7 +149,9 @@ export default function RequestDetail() {
           )}
           <p className="card-meta">
             {formatDate(request.eventDate)}
-            {request.eventTime ? ` · ${request.eventTime} Uhr` : ""}
+            {formatTimeRange(request.eventTime, request.eventEndTime)
+              ? ` · ${formatTimeRange(request.eventTime, request.eventEndTime)}`
+              : ""}
           </p>
           {request.location && <p>📍 {request.location}</p>}
           {request.client && <p>Von: {request.client}</p>}
@@ -194,21 +200,29 @@ export default function RequestDetail() {
             <label>Adresse / Ort</label>
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </div>
+          <div className="field">
+            <label>Datum</label>
+            <input
+              type="date"
+              value={form.eventDate}
+              onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+            />
+          </div>
           <div className="field-row">
             <div className="field">
-              <label>Datum</label>
-              <input
-                type="date"
-                value={form.eventDate}
-                onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label>Uhrzeit</label>
+              <label>Von</label>
               <input
                 type="time"
                 value={form.eventTime}
                 onChange={(e) => setForm({ ...form, eventTime: e.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label>Bis</label>
+              <input
+                type="time"
+                value={form.eventEndTime}
+                onChange={(e) => setForm({ ...form, eventEndTime: e.target.value })}
               />
             </div>
           </div>
