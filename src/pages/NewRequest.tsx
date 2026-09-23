@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError, createRequest } from "../lib/api";
 import { useRequests } from "../context/RequestsContext";
+import ConflictWarning from "../components/ConflictWarning";
+import { findConflicts } from "../lib/conflicts";
 import type { OcrSuggestion } from "../lib/ocr";
 import type { RequestSource } from "../types";
 
@@ -13,7 +15,7 @@ const SOURCE_OPTIONS: { value: RequestSource; label: string }[] = [
 
 export default function NewRequest() {
   const navigate = useNavigate();
-  const { refresh } = useRequests();
+  const { requests, refresh } = useRequests();
 
   const [source, setSource] = useState<RequestSource>("text");
   const [title, setTitle] = useState("");
@@ -34,6 +36,11 @@ export default function NewRequest() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const conflicts = useMemo(
+    () => findConflicts({ eventDate: eventDate || null, eventTime: eventTime || null, eventEndTime: eventEndTime || null }, requests),
+    [eventDate, eventTime, eventEndTime, requests]
+  );
 
   async function handleImageSelected(file: File | null) {
     setImageFile(file);
@@ -207,6 +214,8 @@ export default function NewRequest() {
           <label htmlFor="notes">Notizen (Honorar, Dauer, Wünsche …)</label>
           <textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
+
+        <ConflictWarning conflicts={conflicts} />
 
         <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
           {submitting ? "Speichern …" : "Anfrage speichern"}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useRequests } from "../context/RequestsContext";
@@ -6,6 +6,8 @@ import * as api from "../lib/api";
 import { ApiError } from "../lib/api";
 import StatusBadge from "../components/StatusBadge";
 import VoteButtons from "../components/VoteButtons";
+import ConflictWarning from "../components/ConflictWarning";
+import { findConflicts } from "../lib/conflicts";
 import { formatTimeRange } from "../lib/format";
 import type { BookingRequest, VoteValue } from "../types";
 
@@ -28,7 +30,7 @@ export default function RequestDetail() {
   const requestId = Number(id);
   const navigate = useNavigate();
   const { member } = useAuth();
-  const { refresh } = useRequests();
+  const { requests, refresh } = useRequests();
 
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +46,28 @@ export default function RequestDetail() {
     notes: ""
   });
   const [busy, setBusy] = useState(false);
+
+  const viewConflicts = useMemo(
+    () =>
+      request
+        ? findConflicts(
+            { eventDate: request.eventDate, eventTime: request.eventTime, eventEndTime: request.eventEndTime },
+            requests,
+            request.id
+          )
+        : [],
+    [request, requests]
+  );
+
+  const editConflicts = useMemo(
+    () =>
+      findConflicts(
+        { eventDate: form.eventDate || null, eventTime: form.eventTime || null, eventEndTime: form.eventEndTime || null },
+        requests,
+        requestId
+      ),
+    [form.eventDate, form.eventTime, form.eventEndTime, requests, requestId]
+  );
 
   async function load() {
     try {
@@ -142,6 +166,8 @@ export default function RequestDetail() {
         <StatusBadge status={request.status} />
       </div>
 
+      {!editing && <ConflictWarning conflicts={viewConflicts} />}
+
       {!editing ? (
         <div className="card">
           {request.source === "public" && (
@@ -230,6 +256,7 @@ export default function RequestDetail() {
             <label>Notizen</label>
             <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+          <ConflictWarning conflicts={editConflicts} />
           <div style={{ display: "flex", gap: 8 }}>
             <button type="submit" className="btn btn-primary" disabled={busy}>
               Speichern

@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type {
@@ -172,6 +173,21 @@ function seedMembers() {
   }
 }
 seedMembers();
+
+// Geheimes Token für den öffentlich erreichbaren, aber unerratbaren
+// iCal-Abo-Link. Wird beim ersten Zugriff erzeugt und dauerhaft in der
+// meta-Tabelle gespeichert, damit der Abo-Link über Neustarts hinweg
+// gültig bleibt.
+export function getCalendarToken(): string {
+  const row = db.prepare("SELECT value FROM meta WHERE key = 'calendar_token'").get() as
+    | { value: string }
+    | undefined;
+  if (row) return row.value;
+
+  const token = randomBytes(24).toString("hex");
+  db.prepare("INSERT INTO meta (key, value) VALUES ('calendar_token', ?)").run(token);
+  return token;
+}
 
 export function getMembers(): Member[] {
   const rows = db.prepare("SELECT id, name FROM members ORDER BY id").all() as {
