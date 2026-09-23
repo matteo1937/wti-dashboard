@@ -43,6 +43,28 @@ export async function getCalendarToken(): Promise<{ token: string }> {
   return request("/calendar/token");
 }
 
+export interface SiteStats {
+  totalViews: number;
+  views30d: number;
+  totalRequests: number;
+  requests30d: number;
+}
+
+export async function getStats(): Promise<SiteStats> {
+  return request("/stats");
+}
+
+export function trackPageView(path: string): void {
+  fetch("/api/public/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, referrer: document.referrer || undefined }),
+    keepalive: true
+  }).catch(() => {
+    // Tracking ist rein informativ - ein Fehlschlag darf die Seite nicht stören.
+  });
+}
+
 export async function getPublicMembers(): Promise<{ members: Member[] }> {
   return request("/public/members");
 }
