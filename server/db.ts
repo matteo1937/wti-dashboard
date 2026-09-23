@@ -32,6 +32,7 @@ db.exec(`
     location TEXT,
     event_date TEXT,
     event_time TEXT,
+    event_end_time TEXT,
     notes TEXT,
     source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text','public')),
     image_path TEXT,
@@ -77,6 +78,7 @@ function migrateRequestsTable() {
         location TEXT,
         event_date TEXT,
         event_time TEXT,
+        event_end_time TEXT,
         notes TEXT,
         source TEXT NOT NULL CHECK(source IN ('screenshot','phone','text','public')),
         image_path TEXT,
@@ -95,6 +97,17 @@ function migrateRequestsTable() {
   }
 }
 migrateRequestsTable();
+
+// Additive Migration: Ende-Uhrzeit (Von/Bis) nachträglich hinzugefügt.
+// Einfaches ALTER TABLE ADD COLUMN reicht hier, da keine Constraints
+// betroffen sind und bestehende Zeilen einfach NULL bekommen.
+function migrateEventEndTime() {
+  const columns = db.prepare("PRAGMA table_info(requests)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "event_end_time")) {
+    db.exec("ALTER TABLE requests ADD COLUMN event_end_time TEXT");
+  }
+}
+migrateEventEndTime();
 
 // Einmaliger, sicherer Reset-Mechanismus: wird nur ausgeführt, wenn
 // RESET_ALL_DATA_TOKEN gesetzt ist UND sich vom zuletzt angewendeten Token
@@ -190,6 +203,7 @@ interface RequestRow {
   location: string | null;
   event_date: string | null;
   event_time: string | null;
+  event_end_time: string | null;
   notes: string | null;
   source: BookingRequest["source"];
   image_path: string | null;
@@ -227,6 +241,7 @@ function rowToRequest(row: RequestRow): BookingRequest {
     location: row.location,
     eventDate: row.event_date,
     eventTime: row.event_time,
+    eventEndTime: row.event_end_time,
     notes: row.notes,
     source: row.source,
     imagePath: row.image_path,
@@ -240,7 +255,7 @@ function rowToRequest(row: RequestRow): BookingRequest {
 }
 
 const REQUEST_SELECT = `
-  SELECT r.id, r.title, r.client, r.contact, r.location, r.event_date, r.event_time, r.notes,
+  SELECT r.id, r.title, r.client, r.contact, r.location, r.event_date, r.event_time, r.event_end_time, r.notes,
          r.source, r.image_path, r.created_by, m.name AS created_by_name,
          r.created_at, r.updated_at, r.status
   FROM requests r
@@ -266,8 +281,8 @@ export function createRequest(input: NewRequestInput): BookingRequest {
   const result = db
     .prepare(
       `INSERT INTO requests
-        (title, client, contact, location, event_date, event_time, notes, source, image_path, created_by, created_at, updated_at, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`
+        (title, client, contact, location, event_date, event_time, event_end_time, notes, source, image_path, created_by, created_at, updated_at, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`
     )
     .run(
       input.title,
@@ -276,6 +291,7 @@ export function createRequest(input: NewRequestInput): BookingRequest {
       input.location ?? null,
       input.eventDate ?? null,
       input.eventTime ?? null,
+      input.eventEndTime ?? null,
       input.notes ?? null,
       input.source,
       input.imagePath ?? null,
@@ -295,7 +311,7 @@ export function updateRequest(id: number, input: UpdateRequestInput): BookingReq
   db.prepare(
     `UPDATE requests SET
        title = ?, client = ?, contact = ?, location = ?, event_date = ?, event_time = ?,
-       notes = ?, source = ?, image_path = ?, updated_at = ?
+       event_end_time = ?, notes = ?, source = ?, image_path = ?, updated_at = ?
      WHERE id = ?`
   ).run(
     input.title ?? existing.title,
@@ -304,6 +320,7 @@ export function updateRequest(id: number, input: UpdateRequestInput): BookingReq
     input.location !== undefined ? input.location : existing.location,
     input.eventDate !== undefined ? input.eventDate : existing.eventDate,
     input.eventTime !== undefined ? input.eventTime : existing.eventTime,
+    input.eventEndTime !== undefined ? input.eventEndTime : existing.eventEndTime,
     input.notes !== undefined ? input.notes : existing.notes,
     input.source ?? existing.source,
     input.imagePath !== undefined ? input.imagePath : existing.imagePath,

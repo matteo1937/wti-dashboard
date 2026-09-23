@@ -10,6 +10,7 @@ export default function RequestForm() {
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
+  const [eventEndTime, setEventEndTime] = useState("");
   const [notes, setNotes] = useState("");
   const [website, setWebsite] = useState(""); // Honeypot
 
@@ -33,6 +34,7 @@ export default function RequestForm() {
         location: location.trim(),
         eventDate,
         eventTime,
+        eventEndTime,
         notes: notes.trim(),
         website
       });
@@ -51,6 +53,7 @@ export default function RequestForm() {
     setLocation("");
     setEventDate("");
     setEventTime("");
+    setEventEndTime("");
     setNotes("");
     setDone(false);
   }
@@ -141,23 +144,33 @@ export default function RequestForm() {
                 />
               </div>
 
+              <div className="field">
+                <label htmlFor="eventDate">Datum (falls bekannt)</label>
+                <input
+                  id="eventDate"
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                />
+              </div>
+
               <div className="field-row">
                 <div className="field">
-                  <label htmlFor="eventDate">Datum (falls bekannt)</label>
-                  <input
-                    id="eventDate"
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="eventTime">Uhrzeit</label>
+                  <label htmlFor="eventTime">Von</label>
                   <input
                     id="eventTime"
                     type="time"
                     value={eventTime}
                     onChange={(e) => setEventTime(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="eventEndTime">Bis</label>
+                  <input
+                    id="eventEndTime"
+                    type="time"
+                    value={eventEndTime}
+                    onChange={(e) => setEventEndTime(e.target.value)}
                   />
                 </div>
               </div>

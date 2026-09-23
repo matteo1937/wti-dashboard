@@ -22,6 +22,7 @@ export default function NewRequest() {
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
+  const [eventEndTime, setEventEndTime] = useState("");
   const [notes, setNotes] = useState("");
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -81,6 +82,7 @@ export default function NewRequest() {
       formData.set("location", location.trim());
       formData.set("eventDate", eventDate);
       formData.set("eventTime", eventTime);
+      formData.set("eventEndTime", eventEndTime);
       formData.set("notes", notes.trim());
       formData.set("source", source);
       if (imageFile) formData.set("image", imageFile);
@@ -180,14 +182,24 @@ export default function NewRequest() {
           />
         </div>
 
+        <div className="field">
+          <label htmlFor="eventDate">Datum</label>
+          <input id="eventDate" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+        </div>
+
         <div className="field-row">
           <div className="field">
-            <label htmlFor="eventDate">Datum</label>
-            <input id="eventDate" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+            <label htmlFor="eventTime">Von</label>
+            <input id="eventTime" type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="eventTime">Uhrzeit</label>
-            <input id="eventTime" type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
+            <label htmlFor="eventEndTime">Bis</label>
+            <input
+              id="eventEndTime"
+              type="time"
+              value={eventEndTime}
+              onChange={(e) => setEventEndTime(e.target.value)}
+            />
           </div>
         </div>
 

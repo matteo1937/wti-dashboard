@@ -50,6 +50,7 @@ export interface PublicRequestInput {
   location?: string;
   eventDate?: string;
   eventTime?: string;
+  eventEndTime?: string;
   notes?: string;
   website?: string; // Honeypot, muss leer bleiben
 }

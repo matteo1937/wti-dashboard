@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { BookingRequest } from "../types";
 import StatusBadge from "./StatusBadge";
+import { formatTimeRange } from "../lib/format";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "Datum offen";
@@ -30,7 +31,9 @@ export default function RequestCard({
           <p className="card-title">{request.title}</p>
           <p className="card-meta">
             {formatDate(request.eventDate)}
-            {request.eventTime ? ` · ${request.eventTime} Uhr` : ""}
+            {formatTimeRange(request.eventTime, request.eventEndTime)
+              ? ` · ${formatTimeRange(request.eventTime, request.eventEndTime)}`
+              : ""}
           </p>
         </div>
         {missingMyVote ? (

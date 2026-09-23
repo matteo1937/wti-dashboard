@@ -22,6 +22,7 @@ export interface BookingRequest {
   location: string | null;
   eventDate: string | null;
   eventTime: string | null;
+  eventEndTime: string | null;
   notes: string | null;
   source: RequestSource;
   imagePath: string | null;
