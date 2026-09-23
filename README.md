@@ -10,10 +10,16 @@ Kalender übernommen.
 
 ## Funktionen
 
-- **Öffentliches Anfrageformular** (`/`) — Interessierte können ohne Login
-  direkt eine Anfrage stellen (Name, Kontakt, Anlass, Datum, Nachricht).
-  Landet automatisch als offene Anfrage im internen Bereich. Geschützt durch
-  Rate-Limiting und ein Honeypot-Feld gegen Spam.
+- **Öffentliche Landingpage** (`/`) — Eigenständiges Design ("Käserei
+  Modern": Tannengrün/Cremeweiss/Gold, Fraunces/Inter, dezente
+  Scroll-Animationen) mit Hero-Bandfoto, Über-uns-Text, Besetzung
+  (Musiker-Karten), Hörproben (Spotify-Einbettung + Instagram/Spotify-Links)
+  und Anfrageformular. Interessierte können ohne Login direkt eine Anfrage
+  stellen (Name, Kontakt, Anlass, Datum, Nachricht) — landet automatisch als
+  offene Anfrage im internen Bereich. Geschützt durch Rate-Limiting und ein
+  Honeypot-Feld gegen Spam. Der interne Bereich hat bewusst weiterhin sein
+  eigenes, unverändertes Design (Stile sind über die `.public-landing`-Klasse
+  strikt getrennt).
 - **Interner Bereich** (`/intern`, Login mit Name + Zugangscode) —
   Anfrage erfassen: Datum/Uhrzeit, Ort/Veranstaltung, Auftraggeber, Kontakt,
   Notizen (Honorar, Dauer, Wünsche) und Quelle (Website-Formular,
@@ -43,8 +49,12 @@ src/                       React + Vite Frontend (PWA, mobile-first)
     ocr.ts                   Tesseract.js-Aufruf + Heuristiken (Datum/Zeit/
                               Ort/Absender aus E-Mail-Text erkennen)
   pages/
-    PublicBookingForm.tsx    Öffentliches Anfrageformular auf "/", kein Login
+    PublicBookingForm.tsx    Komponiert die öffentliche Landingpage auf "/"
     Login.tsx                "/intern/login" — Profil wählen + Zugangscode
+  components/public/         Hero, About, Lineup, Listen, RequestForm,
+                              PublicFooter, icons.tsx, Reveal.tsx (Scroll-
+                              Animation) — nur für die öffentliche Seite
+  hooks/useScrollReveal.ts    IntersectionObserver-Hook für Reveal.tsx
     OpenRequests.tsx          Offene Anfragen, getrennt nach "wartet auf
                               dich" / "wartet auf die anderen"
     NewRequest.tsx            Anfrage erfassen inkl. Foto-Upload + OCR
